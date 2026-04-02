@@ -1,0 +1,35 @@
+@import "tailwindcss";
+
+@theme {
+  --font-headline: "Noto Serif", serif;
+  --font-body: "Inter", sans-serif;
+
+  --color-primary: #6241a3;
+  --color-primary-light: #7b5abd;
+  --color-secondary: #6d4ea2;
+  --color-tertiary: #6a5e33;
+  --color-surface: #fbf9f5;
+  --color-surface-low: #f5f3ef;
+  --color-surface-high: #eae8e4;
+  --color-on-surface: #1b1c1a;
+  --color-on-surface-variant: #4a4452;
+  --color-outline: #7b7483;
+  --color-outline-variant: #ccc3d3;
+  --color-primary-container: #eaddff;
+  --color-on-primary: #ffffff;
+  --color-error: #ba1a1a;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--color-surface);
+  color: var(--color-on-surface);
+}
+
+h1, h2, h3, .serif {
+  font-family: var(--font-headline);
+}
+
+#root {
+  min-height: 100svh;
+}

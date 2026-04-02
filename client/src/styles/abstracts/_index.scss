@@ -1,4 +1,0 @@
-// Archivo índice — re-exporta todo desde esta carpeta
-// El vite.config.ts usa @use "@/styles/abstracts" as * para inyectarlo globalmente
-@forward 'variables';
-@forward 'mixins';

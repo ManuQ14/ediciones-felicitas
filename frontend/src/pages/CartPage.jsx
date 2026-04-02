@@ -1,0 +1,140 @@
+import { Link } from 'react-router-dom';
+import Navbar from '../components/layout/Navbar';
+import { useCart } from '../context/CartContext';
+
+const formatPeso = (n) =>
+  new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n);
+
+function CartItem({ item, onUpdateQty, onRemove }) {
+  return (
+    <div className="flex flex-col md:flex-row gap-6 items-start group py-8 border-b border-outline-variant/20 last:border-b-0">
+      {/* Cover */}
+      <Link to={`/libro/${item.bookId}`} className="w-full md:w-36 aspect-[2/3] bg-surface-low overflow-hidden rounded-lg shadow-md transition-transform duration-500 group-hover:scale-[1.02] flex-shrink-0">
+        {item.imagen ? (
+          <img src={item.imagen} alt={item.titulo} className="w-full h-full object-cover" />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-primary/5">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 text-primary/20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          </div>
+        )}
+      </Link>
+
+      {/* Info */}
+      <div className="flex-1 flex flex-col justify-between self-stretch py-1">
+        <div className="flex justify-between items-start">
+          <div>
+            <Link to={`/libro/${item.bookId}`} className="text-xl font-headline text-on-surface hover:text-primary transition-colors">
+              {item.titulo}
+            </Link>
+            {item.autor && <p className="text-on-surface-variant text-sm mt-0.5">{item.autor}</p>}
+          </div>
+          <p className="text-lg font-headline text-primary flex-shrink-0 ml-4">{formatPeso(item.precio * item.qty)}</p>
+        </div>
+
+        <div className="mt-6 flex items-center justify-between">
+          {/* Qty */}
+          <div className="flex items-center gap-3 bg-surface-low px-4 py-2 rounded-full">
+            <button onClick={() => onUpdateQty(item.bookId, item.qty - 1)} className="hover:text-primary transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </button>
+            <span className="text-sm font-medium w-6 text-center">{item.qty}</span>
+            <button onClick={() => onUpdateQty(item.bookId, item.qty + 1)} className="hover:text-primary transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </button>
+          </div>
+          {/* Remove */}
+          <button
+            onClick={() => onRemove(item.bookId)}
+            className="flex items-center gap-2 text-on-surface-variant hover:text-error transition-colors text-xs uppercase tracking-widest font-semibold"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+            Eliminar
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function CartPage() {
+  const { items, updateQty, removeItem, totalPrice } = useCart();
+
+  return (
+    <div className="min-h-screen bg-surface">
+      <Navbar />
+
+      <main className="max-w-screen-xl mx-auto px-8 py-16 pt-28">
+        <header className="mb-12">
+          <h1 className="text-4xl md:text-5xl font-headline text-on-surface tracking-tight italic">Tu Carrito de Lectura</h1>
+          <p className="text-on-surface-variant mt-2 max-w-lg">
+            {items.length > 0
+              ? 'Una selección curada de tus futuros descubrimientos literarios.'
+              : 'Tu carrito está vacío. Explorá el catálogo para encontrar tu próxima lectura.'
+            }
+          </p>
+        </header>
+
+        {items.length === 0 ? (
+          <div className="text-center py-20">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-16 h-16 text-outline-variant mx-auto mb-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+            <Link to="/" className="inline-flex items-center gap-3 text-primary font-bold text-lg hover:underline">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+              Explorar el Catálogo
+            </Link>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
+            {/* Items */}
+            <div className="lg:col-span-8">
+              {items.map((item) => (
+                <CartItem key={item.bookId} item={item} onUpdateQty={updateQty} onRemove={removeItem} />
+              ))}
+              <div className="pt-8">
+                <Link to="/" className="inline-flex items-center gap-3 text-secondary font-medium hover:gap-5 transition-all">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+                  Continuar Explorando el Catálogo
+                </Link>
+              </div>
+            </div>
+
+            {/* Summary */}
+            <div className="lg:col-span-4">
+              <div className="sticky top-28 p-8 rounded-xl bg-surface-low">
+                <h2 className="text-2xl font-headline mb-8 border-b border-outline-variant/20 pb-4">Resumen de Pedido</h2>
+                <div className="space-y-4 mb-8">
+                  <div className="flex justify-between text-on-surface-variant">
+                    <span>Subtotal ({items.reduce((s, i) => s + i.qty, 0)} libros)</span>
+                    <span className="font-medium">{formatPeso(totalPrice)}</span>
+                  </div>
+                  <div className="flex justify-between text-on-surface-variant">
+                    <span>Envío</span>
+                    <span className="text-xs uppercase tracking-tight">Calculado al pagar</span>
+                  </div>
+                </div>
+                <div className="flex justify-between items-baseline mb-8 pt-4 border-t border-outline-variant/20">
+                  <span className="text-lg font-medium">Total</span>
+                  <div className="text-right">
+                    <span className="text-3xl font-headline text-primary block leading-none">{formatPeso(totalPrice)}</span>
+                    <span className="text-[10px] text-on-surface-variant uppercase tracking-widest">IVA incluido</span>
+                  </div>
+                </div>
+                <button className="w-full py-5 bg-primary text-on-primary rounded-full font-bold uppercase tracking-widest text-sm flex items-center justify-center gap-3 hover:shadow-lg hover:shadow-primary/20 active:scale-95 transition-all">
+                  Finalizar Compra
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                </button>
+                <div className="mt-6 flex justify-center gap-4 text-on-surface-variant/50">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+                </div>
+                <p className="text-[10px] text-center text-on-surface-variant/50 font-medium mt-3 uppercase tracking-widest leading-relaxed">
+                  Envío a todo el país
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+      </main>
+    </div>
+  );
+}
