@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '../components/layout/Navbar';
 import { useCart } from '../context/CartContext';
@@ -56,12 +57,61 @@ function CartItem({ item, onUpdateQty, onRemove }) {
   );
 }
 
+function ConfirmModal({ title, message, confirmLabel, confirmClass, onConfirm, onCancel }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+      <div className="bg-surface rounded-2xl shadow-2xl p-8 max-w-sm w-full">
+        <h3 className="text-xl font-headline text-on-surface mb-3">{title}</h3>
+        <p className="text-on-surface-variant text-sm mb-8">{message}</p>
+        <div className="flex gap-3 justify-end">
+          <button
+            onClick={onCancel}
+            className="px-6 py-3 text-sm font-bold uppercase tracking-widest text-on-surface-variant hover:text-on-surface transition-colors"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={onConfirm}
+            className={`px-6 py-3 text-sm font-bold uppercase tracking-widest rounded-full transition-all active:scale-95 ${confirmClass}`}
+          >
+            {confirmLabel}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function CartPage() {
-  const { items, updateQty, removeItem, totalPrice } = useCart();
+  const { items, updateQty, removeItem, clearCart, totalPrice } = useCart();
+  const [showClearModal, setShowClearModal] = useState(false);
+  const [showCheckoutModal, setShowCheckoutModal] = useState(false);
 
   return (
     <div className="min-h-screen bg-surface">
       <Navbar />
+
+      {showClearModal && (
+        <ConfirmModal
+          title="¿Vaciar el carrito?"
+          message="Se eliminarán todos los libros seleccionados. Esta acción no se puede deshacer."
+          confirmLabel="Sí, vaciar"
+          confirmClass="bg-error text-on-error hover:bg-error/90"
+          onConfirm={() => { clearCart(); setShowClearModal(false); }}
+          onCancel={() => setShowClearModal(false)}
+        />
+      )}
+
+      {showCheckoutModal && (
+        <ConfirmModal
+          title="Confirmar compra"
+          message={`Estás a punto de finalizar tu pedido por ${formatPeso(totalPrice)}. ¿Continuás con el pago?`}
+          confirmLabel="Continuar al pago"
+          confirmClass="bg-primary text-on-primary hover:shadow-lg hover:shadow-primary/20"
+          onConfirm={() => { setShowCheckoutModal(false); /* TODO: MercadoPago */ }}
+          onCancel={() => setShowCheckoutModal(false)}
+        />
+      )}
 
       <main className="max-w-screen-xl mx-auto px-8 py-16 pt-28">
         <header className="mb-12">
@@ -89,11 +139,18 @@ export default function CartPage() {
               {items.map((item) => (
                 <CartItem key={item.bookId} item={item} onUpdateQty={updateQty} onRemove={removeItem} />
               ))}
-              <div className="pt-8">
+              <div className="pt-8 flex items-center justify-between">
                 <Link to="/" className="inline-flex items-center gap-3 text-secondary font-medium hover:gap-5 transition-all">
                   <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
                   Continuar Explorando el Catálogo
                 </Link>
+                <button
+                  onClick={() => setShowClearModal(true)}
+                  className="flex items-center gap-2 text-on-surface-variant hover:text-error transition-colors text-xs font-bold uppercase tracking-widest"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                  Vaciar carrito
+                </button>
               </div>
             </div>
 
@@ -118,7 +175,10 @@ export default function CartPage() {
                     <span className="text-[10px] text-on-surface-variant uppercase tracking-widest">IVA incluido</span>
                   </div>
                 </div>
-                <button className="w-full py-5 bg-primary text-on-primary rounded-full font-bold uppercase tracking-widest text-sm flex items-center justify-center gap-3 hover:shadow-lg hover:shadow-primary/20 active:scale-95 transition-all">
+                <button
+                  onClick={() => setShowCheckoutModal(true)}
+                  className="w-full py-5 bg-primary text-on-primary rounded-full font-bold uppercase tracking-widest text-sm flex items-center justify-center gap-3 hover:shadow-lg hover:shadow-primary/20 active:scale-95 transition-all"
+                >
                   Finalizar Compra
                   <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                 </button>

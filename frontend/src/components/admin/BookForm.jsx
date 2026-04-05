@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-const EMPTY = { titulo: '', isbn: '', precio: '', autor: '', categoria: '', imagen: '' };
+const EMPTY = { titulo: '', isbn: '', precio: '', autor: '', categoria: '', imagen: '', tieneDigital: false };
 
 const CATEGORIAS = [
   'Narrativa', 'Poesía', 'Historia', 'Biografía',
@@ -18,14 +18,15 @@ export default function BookForm({ book, onSubmit, onCancel, loading }) {
 
   useEffect(() => {
     setForm(book
-      ? { titulo: book.titulo || '', isbn: book.isbn || '', precio: book.precio || '', autor: book.autor || '', categoria: book.categoria || '', imagen: book.imagen || '' }
+      ? { titulo: book.titulo || '', isbn: book.isbn || '', precio: book.precio || '', autor: book.autor || '', categoria: book.categoria || '', imagen: book.imagen || '', tieneDigital: book.tieneDigital ?? false }
       : EMPTY
     );
     setError('');
   }, [book]);
 
   const handleChange = (e) => {
-    setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
+    const { name, type, value, checked } = e.target;
+    setForm((f) => ({ ...f, [name]: type === 'checkbox' ? checked : value }));
     setError('');
   };
 
@@ -124,6 +125,24 @@ export default function BookForm({ book, onSubmit, onCancel, loading }) {
         <div>
           <label className={labelClass}>URL de portada</label>
           <input name="imagen" value={form.imagen} onChange={handleChange} className={inputClass} placeholder="https://..." />
+        </div>
+
+        {/* Edición digital */}
+        <div className="flex items-center justify-between p-5 bg-surface rounded-lg">
+          <div>
+            <p className={labelClass + ' mb-0.5'}>Versión Digital Disponible</p>
+            <p className="text-xs text-on-surface-variant">Muestra al comprador la opción de elegir entre físico y digital</p>
+          </div>
+          <label className="relative inline-flex items-center cursor-pointer flex-shrink-0 ml-4">
+            <input
+              type="checkbox"
+              name="tieneDigital"
+              checked={form.tieneDigital}
+              onChange={handleChange}
+              className="sr-only peer"
+            />
+            <div className="w-12 h-6 bg-outline-variant rounded-full peer peer-checked:bg-primary transition-colors after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-6" />
+          </label>
         </div>
 
         {error && <p className="text-error text-sm">{error}</p>}

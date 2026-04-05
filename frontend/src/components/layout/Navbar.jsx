@@ -10,7 +10,7 @@ export default function Navbar() {
     <header className="fixed top-0 z-50 w-full bg-surface/80 backdrop-blur-md border-b border-outline-variant/30">
       <nav className="flex justify-between items-center w-full px-8 py-4 max-w-screen-xl mx-auto">
         <Link to="/" className="flex items-center gap-3">
-          <img src="/logo-ef.png" alt="Ediciones Felicitas" className="h-10" />
+          <img src="/logo-ef.png" alt="Ediciones Felicitas" className="h-12" />
         </Link>
 
         <div className="flex items-center gap-6">
@@ -35,11 +35,16 @@ export default function Navbar() {
 
           {/* User */}
           {isLoggedIn ? (
-            <div className="flex items-center gap-3">
-              <span className="text-sm text-on-surface-variant hidden md:block">{user?.nombre}</span>
+            <div className="flex items-center gap-4">
+              <Link
+                to="/cuenta/login"
+                className="text-sm text-on-surface-variant hover:text-primary transition-colors hidden md:block font-medium"
+              >
+                {user?.nombre}
+              </Link>
               <button
                 onClick={logout}
-                className="text-on-surface-variant hover:text-primary transition-colors text-xs font-medium uppercase tracking-wider"
+                className="text-on-surface-variant hover:text-error transition-colors text-xs font-medium uppercase tracking-wider"
               >
                 Salir
               </button>
