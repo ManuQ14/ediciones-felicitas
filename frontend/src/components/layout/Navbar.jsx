@@ -10,7 +10,7 @@ export default function Navbar() {
     <header className="fixed top-0 z-50 w-full bg-surface/80 backdrop-blur-md border-b border-outline-variant/30">
       <nav className="flex justify-between items-center w-full px-8 py-4 max-w-screen-xl mx-auto">
         <Link to="/" className="flex items-center gap-3">
-          <img src="/logo-ef.png" alt="Ediciones Felicitas" className="h-12" />
+          <img src="/logo-ef.png" alt="Ediciones Felicitas" className="h-14" />
         </Link>
 
         <div className="flex items-center gap-6">
@@ -37,7 +37,7 @@ export default function Navbar() {
           {isLoggedIn ? (
             <div className="flex items-center gap-4">
               <Link
-                to="/cuenta/login"
+                to="/cuenta"
                 className="text-sm text-on-surface-variant hover:text-primary transition-colors hidden md:block font-medium"
               >
                 {user?.nombre}

@@ -9,6 +9,7 @@ import LoginPage from './pages/LoginPage';
 import UserLoginPage from './pages/UserLoginPage';
 import RegisterPage from './pages/RegisterPage';
 import AdminBooksPage from './pages/AdminBooksPage';
+import AccountPage from './pages/AccountPage';
 
 function PrivateRoute({ children }) {
   const { isAuth } = useAuth();
@@ -26,6 +27,7 @@ function AppRoutes() {
       {/* User auth */}
       <Route path="/cuenta/login" element={<UserLoginPage />} />
       <Route path="/cuenta/registro" element={<RegisterPage />} />
+      <Route path="/cuenta" element={<AccountPage />} />
 
       {/* Admin auth */}
       <Route path="/login" element={<LoginPage />} />

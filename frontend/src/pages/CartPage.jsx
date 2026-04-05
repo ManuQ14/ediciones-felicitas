@@ -96,7 +96,7 @@ export default function CartPage() {
           title="¿Vaciar el carrito?"
           message="Se eliminarán todos los libros seleccionados. Esta acción no se puede deshacer."
           confirmLabel="Sí, vaciar"
-          confirmClass="bg-error text-on-error hover:bg-error/90"
+          confirmClass="bg-primary-container text-primary hover:bg-primary-container/70"
           onConfirm={() => { clearCart(); setShowClearModal(false); }}
           onCancel={() => setShowClearModal(false)}
         />

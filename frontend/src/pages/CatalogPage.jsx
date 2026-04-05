@@ -113,9 +113,9 @@ export default function CatalogPage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-outline-variant/30 py-10 mt-8">
+      <footer className="border-t border-outline-variant/30 py-12 mt-8">
         <div className="max-w-screen-xl mx-auto px-8 text-center text-on-surface-variant text-sm">
-          <p className="font-headline italic text-primary text-lg mb-2">Ediciones Felicitas</p>
+          <img src="/logo-ef.png" alt="Ediciones Felicitas" className="h-20 mx-auto mb-4 opacity-80" />
           <p>© {new Date().getFullYear()} Todos los derechos reservados.</p>
         </div>
       </footer>
