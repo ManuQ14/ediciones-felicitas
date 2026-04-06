@@ -185,12 +185,24 @@ const updateOrderStatus = async (req, res) => {
     if (!allowed.includes(status)) {
       return res.status(400).json({ error: 'Estado inválido' });
     }
-    const order = await Order.findByPk(req.params.id);
+    const order = await Order.findByPk(req.params.id, { include: [{ model: OrderItem }] });
     if (!order) return res.status(404).json({ error: 'Orden no encontrada' });
+
     const updateData = { status };
     if (cancelNote !== undefined) updateData.cancelNote = cancelNote;
     if (cancelReason !== undefined) updateData.cancelReason = cancelReason;
     await order.update(updateData);
+
+    // Decrement stock when manually approving (same logic as webhook)
+    if (status === 'approved' && order.status !== 'approved') {
+      for (const item of order.OrderItems.filter(i => i.edicion === 'fisico')) {
+        if (item.bookId) {
+          await Book.decrement('stock', { by: item.qty, where: { id: item.bookId } });
+          await Book.update({ stock: 0 }, { where: { id: item.bookId, stock: { [Op.lt]: 0 } } });
+        }
+      }
+    }
+
     res.json(order);
   } catch {
     res.status(500).json({ error: 'Error al actualizar el estado' });
