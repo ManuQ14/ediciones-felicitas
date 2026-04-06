@@ -27,9 +27,19 @@ const Book = sequelize.define('Book', {
     type: DataTypes.STRING,
     allowNull: true,
   },
+  slug: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    unique: true,
+  },
   tieneDigital: {
     type: DataTypes.BOOLEAN,
     defaultValue: false,
+  },
+  archivoDigital: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    comment: 'Ruta al archivo digital (PDF/epub) para descarga post-pago',
   },
   activo: {
     type: DataTypes.BOOLEAN,

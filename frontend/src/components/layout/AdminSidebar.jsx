@@ -40,9 +40,9 @@ export default function AdminSidebar() {
   return (
     <aside className="h-screen w-64 fixed left-0 top-0 bg-surface flex flex-col py-8 pr-4 z-50 border-r border-outline-variant/20">
       {/* Logo */}
-      <div className="px-6 mb-12">
-        <h1 className="font-headline text-lg text-primary italic">Ediciones Felicitas</h1>
-        <p className="text-xs uppercase tracking-widest text-outline mt-1">Panel Admin</p>
+      <div className="px-6 mb-10 flex flex-col items-start gap-2">
+        <img src="/logo-ef.png" alt="Ediciones Felicitas" className="h-14" />
+        <span className="text-[0.625rem] font-bold uppercase tracking-widest text-outline">Panel Admin</span>
       </div>
 
       {/* Nav */}

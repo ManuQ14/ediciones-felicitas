@@ -1,19 +1,29 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import { UserProvider } from './context/UserContext';
+import { UserProvider, useUser } from './context/UserContext';
 import { CartProvider } from './context/CartContext';
 import CatalogPage from './pages/CatalogPage';
 import BookDetailPage from './pages/BookDetailPage';
 import CartPage from './pages/CartPage';
 import LoginPage from './pages/LoginPage';
-import UserLoginPage from './pages/UserLoginPage';
-import RegisterPage from './pages/RegisterPage';
+import AuthPage from './pages/AuthPage';
 import AdminBooksPage from './pages/AdminBooksPage';
 import AccountPage from './pages/AccountPage';
+import Spinner from './components/ui/Spinner';
 
-function PrivateRoute({ children }) {
+// Admin: muestra el login si no está autenticado, el panel si sí
+function AdminRoute({ children }) {
   const { isAuth } = useAuth();
-  return isAuth ? children : <Navigate to="/login" replace />;
+  if (!isAuth) return <LoginPage />;
+  return children;
+}
+
+// Usuario: redirige a /login si no está autenticado
+function UserRoute({ children }) {
+  const { isLoggedIn, loading } = useUser();
+  if (loading) return <div className="min-h-screen flex items-center justify-center"><Spinner /></div>;
+  if (!isLoggedIn) return <Navigate to="/login" replace />;
+  return children;
 }
 
 function AppRoutes() {
@@ -21,32 +31,21 @@ function AppRoutes() {
     <Routes>
       {/* Public */}
       <Route path="/" element={<CatalogPage />} />
-      <Route path="/libro/:id" element={<BookDetailPage />} />
+      <Route path="/libro/:slug" element={<BookDetailPage />} />
       <Route path="/carrito" element={<CartPage />} />
 
-      {/* User auth */}
-      <Route path="/cuenta/login" element={<UserLoginPage />} />
-      <Route path="/cuenta/registro" element={<RegisterPage />} />
-      <Route path="/cuenta" element={<AccountPage />} />
+      {/* User auth — una sola URL con tabs login/registro */}
+      <Route path="/login" element={<AuthPage />} />
+      {/* Redirects para URLs viejas */}
+      <Route path="/cuenta/login" element={<Navigate to="/login" replace />} />
+      <Route path="/cuenta/registro" element={<Navigate to="/login" replace />} />
 
-      {/* Admin auth */}
-      <Route path="/login" element={<LoginPage />} />
-      <Route
-        path="/admin"
-        element={
-          <PrivateRoute>
-            <AdminBooksPage />
-          </PrivateRoute>
-        }
-      />
-      <Route
-        path="/admin/nuevo"
-        element={
-          <PrivateRoute>
-            <AdminBooksPage openForm />
-          </PrivateRoute>
-        }
-      />
+      {/* User account */}
+      <Route path="/cuenta" element={<UserRoute><AccountPage /></UserRoute>} />
+
+      {/* Admin — /admin muestra login o panel según auth */}
+      <Route path="/admin" element={<AdminRoute><AdminBooksPage /></AdminRoute>} />
+      <Route path="/admin/nuevo" element={<AdminRoute><AdminBooksPage openForm /></AdminRoute>} />
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

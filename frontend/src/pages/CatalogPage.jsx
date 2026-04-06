@@ -9,7 +9,7 @@ const formatPeso = (n) =>
 
 function BookCard({ book }) {
   return (
-    <Link to={`/libro/${book.id}`} className="group cursor-pointer block">
+    <Link to={`/libro/${book.slug || book.id}`} className="group cursor-pointer block">
       <div className="aspect-[2/3] bg-surface-high rounded-lg mb-4 overflow-hidden relative shadow-sm group-hover:shadow-xl transition-all duration-500 transform group-hover:-translate-y-1">
         {book.imagen ? (
           <img src={book.imagen} alt={book.titulo} className="w-full h-full object-cover" />

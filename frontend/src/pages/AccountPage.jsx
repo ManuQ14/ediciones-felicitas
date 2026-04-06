@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Navbar from '../components/layout/Navbar';
 import { useUser } from '../context/UserContext';
 
@@ -136,11 +136,103 @@ function AddressSection({ user, onSave }) {
   );
 }
 
-const TABS = ['Mis pedidos', 'Mi perfil', 'Dirección'];
+function SecuritySection({ onChangePassword, onDeleteAccount }) {
+  const [pwForm, setPwForm] = useState({ current: '', next: '', confirm: '' });
+  const [pwSaving, setPwSaving] = useState(false);
+  const [pwSuccess, setPwSuccess] = useState(false);
+  const [pwError, setPwError] = useState('');
+
+  const [deletePass, setDeletePass] = useState('');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [delError, setDelError] = useState('');
+
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    if (pwForm.next !== pwForm.confirm) return setPwError('Las contraseñas nuevas no coinciden');
+    if (pwForm.next.length < 6) return setPwError('La nueva contraseña debe tener al menos 6 caracteres');
+    setPwSaving(true); setPwError(''); setPwSuccess(false);
+    try {
+      await onChangePassword(pwForm.current, pwForm.next);
+      setPwSuccess(true);
+      setPwForm({ current: '', next: '', confirm: '' });
+      setTimeout(() => setPwSuccess(false), 3000);
+    } catch (err) {
+      setPwError(err.response?.data?.error || 'Error al cambiar la contraseña');
+    } finally { setPwSaving(false); }
+  };
+
+  const handleDelete = async () => {
+    setDeleting(true); setDelError('');
+    try {
+      await onDeleteAccount(deletePass);
+    } catch (err) {
+      setDelError(err.response?.data?.error || 'Contraseña incorrecta');
+      setDeleting(false);
+    }
+  };
+
+  return (
+    <div className="space-y-10">
+      {/* Cambiar contraseña */}
+      <form onSubmit={handleChangePassword} className="space-y-5">
+        <h3 className="text-base font-bold text-on-surface">Cambiar contraseña</h3>
+        <div>
+          <label className={labelClass}>Contraseña actual</label>
+          <input type="password" value={pwForm.current} onChange={(e) => setPwForm(f => ({ ...f, current: e.target.value }))} className={inputClass} maxLength={100} required />
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          <div>
+            <label className={labelClass}>Nueva contraseña</label>
+            <input type="password" value={pwForm.next} onChange={(e) => setPwForm(f => ({ ...f, next: e.target.value }))} className={inputClass} maxLength={100} minLength={6} required />
+          </div>
+          <div>
+            <label className={labelClass}>Confirmar nueva</label>
+            <input type="password" value={pwForm.confirm} onChange={(e) => setPwForm(f => ({ ...f, confirm: e.target.value }))} className={inputClass} maxLength={100} required />
+          </div>
+        </div>
+        {pwError && <p className="text-error text-sm">{pwError}</p>}
+        {pwSuccess && <p className="text-sm text-tertiary font-medium">Contraseña actualizada correctamente.</p>}
+        <div className="flex justify-end">
+          <button type="submit" disabled={pwSaving} className="px-8 py-3 bg-primary text-on-primary rounded-full font-bold text-xs uppercase tracking-widest hover:shadow-lg hover:shadow-primary/20 active:scale-95 transition-all disabled:opacity-50">
+            {pwSaving ? 'Guardando…' : 'Cambiar contraseña'}
+          </button>
+        </div>
+      </form>
+
+      <div className="border-t border-error/20 pt-8">
+        <h3 className="text-base font-bold text-error mb-2">Zona de peligro</h3>
+        <p className="text-sm text-on-surface-variant mb-5">Una vez eliminada tu cuenta no podrás recuperarla. Se borrarán todos tus datos.</p>
+        {!showDeleteConfirm ? (
+          <button onClick={() => setShowDeleteConfirm(true)} className="px-6 py-3 border-2 border-error text-error rounded-full text-xs font-bold uppercase tracking-widest hover:bg-error hover:text-white transition-colors">
+            Eliminar mi cuenta
+          </button>
+        ) : (
+          <div className="space-y-4 bg-error/5 border border-error/20 rounded-xl p-6">
+            <p className="text-sm font-medium text-on-surface">Ingresá tu contraseña para confirmar:</p>
+            <input type="password" value={deletePass} onChange={(e) => setDeletePass(e.target.value)} className={inputClass} placeholder="Tu contraseña" maxLength={100} />
+            {delError && <p className="text-error text-sm">{delError}</p>}
+            <div className="flex gap-3">
+              <button onClick={() => setShowDeleteConfirm(false)} className="px-6 py-3 text-sm font-bold uppercase tracking-widest text-on-surface-variant hover:text-on-surface transition-colors">
+                Cancelar
+              </button>
+              <button onClick={handleDelete} disabled={deleting || !deletePass} className="px-6 py-3 bg-error text-white rounded-full text-xs font-bold uppercase tracking-widest hover:bg-error/80 transition-colors disabled:opacity-50">
+                {deleting ? 'Eliminando…' : 'Confirmar eliminación'}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+const TABS = ['Mis pedidos', 'Mi perfil', 'Dirección', 'Seguridad'];
 
 export default function AccountPage() {
-  const { user, logout, updateProfile } = useUser();
+  const { user, logout, updateProfile, changePassword, deleteAccount } = useUser();
   const [tab, setTab] = useState('Mis pedidos');
+  const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-surface">
@@ -174,6 +266,9 @@ export default function AccountPage() {
                   )}
                   {t === 'Dirección' && (
                     <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                  )}
+                  {t === 'Seguridad' && (
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                   )}
                   {t}
                 </button>
@@ -223,6 +318,19 @@ export default function AccountPage() {
                 <>
                   <h2 className="text-xl font-headline text-on-surface mb-6">Datos personales</h2>
                   <ProfileSection user={user} onSave={updateProfile} />
+                </>
+              )}
+
+              {tab === 'Seguridad' && (
+                <>
+                  <h2 className="text-xl font-headline text-on-surface mb-6">Seguridad</h2>
+                  <SecuritySection
+                    onChangePassword={changePassword}
+                    onDeleteAccount={async (password) => {
+                      await deleteAccount(password);
+                      navigate('/');
+                    }}
+                  />
                 </>
               )}
 

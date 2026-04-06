@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
+import api from '../../services/api';
 
-const EMPTY = { titulo: '', isbn: '', precio: '', autor: '', categoria: '', imagen: '', tieneDigital: false };
+const EMPTY = { titulo: '', isbn: '', precio: '', autor: '', categoria: '', imagen: '', archivoDigital: '', tieneDigital: false };
 
 const CATEGORIAS = [
   'Narrativa', 'Poesía', 'Historia', 'Biografía',
@@ -10,7 +11,46 @@ const CATEGORIAS = [
 const inputClass =
   'w-full bg-surface-high border-none rounded-lg px-6 py-4 text-on-surface focus:ring-2 focus:ring-primary/30 transition-all outline-none';
 const labelClass =
-  'block text-[10px] font-bold uppercase tracking-widest text-outline mb-3';
+  'block text-[0.625rem] font-bold uppercase tracking-widest text-outline mb-3';
+
+function FileUploadField({ label, accept, type, value, onChange, hint }) {
+  const [uploading, setUploading] = useState(false);
+  const [err, setErr] = useState('');
+
+  const handleFile = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    setErr('');
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const { data } = await api.post(`/upload/${type}`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      onChange(data.url);
+    } catch (e) {
+      setErr(e.response?.data?.error || 'Error al subir el archivo');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <div>
+      <label className={labelClass}>{label}</label>
+      <label className="flex items-center gap-4 cursor-pointer">
+        <span className={`px-5 py-3 rounded-lg border-2 border-dashed text-xs font-bold uppercase tracking-widest transition-colors ${uploading ? 'border-outline-variant text-outline' : 'border-primary/30 text-primary hover:border-primary hover:bg-primary/5'}`}>
+          {uploading ? 'Subiendo…' : 'Elegir archivo'}
+        </span>
+        <input type="file" accept={accept} onChange={handleFile} className="hidden" disabled={uploading} />
+        {value && <span className="text-xs text-on-surface-variant truncate max-w-xs">{value.split('/').pop()}</span>}
+      </label>
+      {hint && <p className="text-xs text-on-surface-variant mt-1">{hint}</p>}
+      {err && <p className="text-xs text-error mt-1">{err}</p>}
+    </div>
+  );
+}
 
 export default function BookForm({ book, onSubmit, onCancel, loading }) {
   const [form, setForm] = useState(EMPTY);
@@ -18,7 +58,16 @@ export default function BookForm({ book, onSubmit, onCancel, loading }) {
 
   useEffect(() => {
     setForm(book
-      ? { titulo: book.titulo || '', isbn: book.isbn || '', precio: book.precio || '', autor: book.autor || '', categoria: book.categoria || '', imagen: book.imagen || '', tieneDigital: book.tieneDigital ?? false }
+      ? {
+          titulo: book.titulo || '',
+          isbn: book.isbn || '',
+          precio: book.precio || '',
+          autor: book.autor || '',
+          categoria: book.categoria || '',
+          imagen: book.imagen || '',
+          archivoDigital: book.archivoDigital || '',
+          tieneDigital: book.tieneDigital ?? false,
+        }
       : EMPTY
     );
     setError('');
@@ -55,33 +104,37 @@ export default function BookForm({ book, onSubmit, onCancel, loading }) {
               </div>
             )}
           </div>
-          <p className="text-[10px] text-outline text-center uppercase tracking-widest">
-            Recomendado: 800 × 1200 px
-          </p>
+          <FileUploadField
+            label="Subir portada"
+            accept="image/jpeg,image/png,image/webp"
+            type="libros"
+            value={form.imagen}
+            onChange={(url) => setForm((f) => ({ ...f, imagen: url }))}
+            hint="JPG, PNG o WebP — máx. 15 MB"
+          />
         </div>
       </div>
 
       {/* Right: Form fields */}
       <div className="col-span-12 lg:col-span-8 space-y-8 bg-surface-low p-8 rounded-xl">
         {/* Título */}
-        <div className="col-span-2">
+        <div>
           <label className={labelClass}>Título de la Obra *</label>
           <input
             name="titulo"
             value={form.titulo}
             onChange={handleChange}
+            maxLength={150}
             className={`${inputClass} font-headline text-xl text-primary`}
             placeholder="Ej. Macacha Güemes"
           />
         </div>
 
         <div className="grid grid-cols-2 gap-6">
-          {/* Autor */}
           <div>
             <label className={labelClass}>Autor</label>
-            <input name="autor" value={form.autor} onChange={handleChange} className={inputClass} placeholder="Nombre del autor" />
+            <input name="autor" value={form.autor} onChange={handleChange} maxLength={100} className={inputClass} placeholder="Nombre del autor" />
           </div>
-          {/* Categoría */}
           <div>
             <label className={labelClass}>Categoría</label>
             <select name="categoria" value={form.categoria} onChange={handleChange} className={`${inputClass} appearance-none`}>
@@ -92,7 +145,6 @@ export default function BookForm({ book, onSubmit, onCancel, loading }) {
         </div>
 
         <div className="grid grid-cols-2 gap-6">
-          {/* Precio */}
           <div>
             <label className={labelClass}>Precio (ARS) *</label>
             <div className="relative">
@@ -108,23 +160,17 @@ export default function BookForm({ book, onSubmit, onCancel, loading }) {
               />
             </div>
           </div>
-          {/* ISBN */}
           <div>
             <label className={labelClass}>ISBN</label>
             <input
               name="isbn"
               value={form.isbn}
               onChange={handleChange}
+              maxLength={20}
               className="w-full bg-transparent border-b-2 border-outline-variant px-2 py-3 font-mono text-sm text-on-surface-variant focus:border-primary transition-colors outline-none"
               placeholder="978-987-..."
             />
           </div>
-        </div>
-
-        {/* Imagen URL */}
-        <div>
-          <label className={labelClass}>URL de portada</label>
-          <input name="imagen" value={form.imagen} onChange={handleChange} className={inputClass} placeholder="https://..." />
         </div>
 
         {/* Edición digital */}
@@ -144,6 +190,26 @@ export default function BookForm({ book, onSubmit, onCancel, loading }) {
             <div className="w-12 h-6 bg-outline-variant rounded-full peer peer-checked:bg-primary transition-colors after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-6" />
           </label>
         </div>
+
+        {/* Archivo digital — solo si tieneDigital */}
+        {form.tieneDigital && (
+          <div className="p-5 bg-surface rounded-lg space-y-3">
+            <FileUploadField
+              label="Archivo digital (PDF o ePub)"
+              accept=".pdf,.epub"
+              type="digital"
+              value={form.archivoDigital}
+              onChange={(url) => setForm((f) => ({ ...f, archivoDigital: url }))}
+              hint="El comprador recibirá este archivo post-pago — máx. 50 MB"
+            />
+            {form.archivoDigital && (
+              <div className="flex items-center gap-2 text-xs text-tertiary">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                Archivo listo para entrega digital
+              </div>
+            )}
+          </div>
+        )}
 
         {error && <p className="text-error text-sm">{error}</p>}
 

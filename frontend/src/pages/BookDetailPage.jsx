@@ -9,7 +9,7 @@ const formatPeso = (n) =>
   new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n);
 
 export default function BookDetailPage() {
-  const { id } = useParams();
+  const { slug } = useParams();
   const [book, setBook] = useState(null);
   const [loading, setLoading] = useState(true);
   const [qty, setQty] = useState(1);
@@ -18,11 +18,11 @@ export default function BookDetailPage() {
   const { addToCart } = useCart();
 
   useEffect(() => {
-    api.get(`/books/${id}`)
+    api.get(`/books/slug/${slug}`)
       .then(({ data }) => { setBook(data); setAdded(false); setQty(1); setEdition('fisico'); })
       .catch(() => setBook(null))
       .finally(() => setLoading(false));
-  }, [id]);
+  }, [slug]);
 
   const handleAddToCart = () => {
     addToCart({ ...book, edicion: edition }, qty);

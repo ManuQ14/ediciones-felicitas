@@ -11,7 +11,7 @@ function CartItem({ item, onUpdateQty, onRemove }) {
   return (
     <div className="flex flex-col md:flex-row gap-6 items-start group py-8 border-b border-outline-variant/20 last:border-b-0">
       {/* Cover */}
-      <Link to={`/libro/${item.bookId}`} className="w-full md:w-36 aspect-[2/3] bg-surface-low overflow-hidden rounded-lg shadow-md transition-transform duration-500 group-hover:scale-[1.02] flex-shrink-0">
+      <Link to={`/libro/${item.slug || item.bookId}`} className="w-full md:w-36 aspect-[2/3] bg-surface-low overflow-hidden rounded-lg shadow-md transition-transform duration-500 group-hover:scale-[1.02] flex-shrink-0">
         {item.imagen ? (
           <img src={item.imagen} alt={item.titulo} className="w-full h-full object-cover" />
         ) : (
@@ -25,7 +25,7 @@ function CartItem({ item, onUpdateQty, onRemove }) {
       <div className="flex-1 flex flex-col justify-between self-stretch py-1">
         <div className="flex justify-between items-start">
           <div>
-            <Link to={`/libro/${item.bookId}`} className="text-xl font-headline text-on-surface hover:text-primary transition-colors">
+            <Link to={`/libro/${item.slug || item.bookId}`} className="text-xl font-headline text-on-surface hover:text-primary transition-colors">
               {item.titulo}
             </Link>
             {item.autor && <p className="text-on-surface-variant text-sm mt-0.5">{item.autor}</p>}

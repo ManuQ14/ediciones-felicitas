@@ -45,12 +45,27 @@ export function UserProvider({ children }) {
 
   const logout = () => {
     localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem('ef_cart');
     setToken(null);
     setUser(null);
   };
 
+  const changePassword = async (currentPassword, newPassword) => {
+    await api.put('/users/me/password', { currentPassword, newPassword }, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  };
+
+  const deleteAccount = async (password) => {
+    await api.delete('/users/me', {
+      data: { password },
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    logout();
+  };
+
   return (
-    <UserContext.Provider value={{ user, token, loading, isLoggedIn: !!user, register, login, logout, updateProfile }}>
+    <UserContext.Provider value={{ user, token, loading, isLoggedIn: !!user, register, login, logout, updateProfile, changePassword, deleteAccount }}>
       {children}
     </UserContext.Provider>
   );
