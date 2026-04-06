@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Navbar from '../components/layout/Navbar';
 import Spinner from '../components/ui/Spinner';
+import ErrorPage from './ErrorPage';
+import NotFoundPage from './NotFoundPage';
 import api from '../services/api';
 import { useCart } from '../context/CartContext';
 
@@ -9,20 +11,26 @@ const formatPeso = (n) =>
   new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n);
 
 export default function BookDetailPage() {
-  const { id } = useParams();
+  const { slug } = useParams();
   const [book, setBook] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
+  const [connError, setConnError] = useState(false);
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
   const [edition, setEdition] = useState('fisico');
   const { addToCart } = useCart();
 
   useEffect(() => {
-    api.get(`/books/${id}`)
+    setLoading(true); setNotFound(false); setConnError(false);
+    api.get(`/books/slug/${slug}`)
       .then(({ data }) => { setBook(data); setAdded(false); setQty(1); setEdition('fisico'); })
-      .catch(() => setBook(null))
+      .catch((err) => {
+        if (err.response?.status === 404) setNotFound(true);
+        else setConnError(true);
+      })
       .finally(() => setLoading(false));
-  }, [id]);
+  }, [slug]);
 
   const handleAddToCart = () => {
     addToCart({ ...book, edicion: edition }, qty);
@@ -30,20 +38,14 @@ export default function BookDetailPage() {
   };
 
   if (loading) return <><Navbar /><div className="pt-24"><Spinner /></div></>;
-  if (!book) return (
-    <><Navbar />
-      <div className="pt-32 text-center">
-        <h2 className="text-2xl font-headline text-on-surface-variant">Libro no encontrado</h2>
-        <Link to="/" className="text-primary mt-4 inline-block hover:underline">Volver al catálogo</Link>
-      </div>
-    </>
-  );
+  if (notFound) return <NotFoundPage />;
+  if (connError) return <ErrorPage onRetry={() => window.location.reload()} />;
 
   return (
     <div className="min-h-screen bg-surface">
       <Navbar />
 
-      <main className="pt-28 pb-24 px-6 md:px-12 max-w-screen-xl mx-auto">
+      <main className="pt-36 pb-24 px-6 md:px-12 max-w-screen-xl mx-auto">
         {/* Breadcrumb */}
         <div className="mb-10 flex items-center gap-2 text-xs tracking-widest uppercase text-tertiary">
           <Link to="/" className="hover:text-primary transition-colors">Catálogo</Link>
@@ -213,9 +215,9 @@ export default function BookDetailPage() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-outline-variant/30 py-10 mt-8">
+      <footer className="border-t border-outline-variant/30 py-12 mt-8">
         <div className="max-w-screen-xl mx-auto px-8 text-center text-on-surface-variant text-sm">
-          <p className="font-headline italic text-primary text-lg mb-2">Ediciones Felicitas</p>
+          <img src="/logo-ef.png" alt="Ediciones Felicitas" className="h-20 mx-auto mb-4 opacity-80" />
           <p>&copy; {new Date().getFullYear()} Todos los derechos reservados.</p>
         </div>
       </footer>

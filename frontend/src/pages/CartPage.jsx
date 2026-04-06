@@ -1,15 +1,20 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '../components/layout/Navbar';
 import { useCart } from '../context/CartContext';
+import { useUser } from '../context/UserContext';
+import { sanitize } from '../utils/sanitize';
 
 const formatPeso = (n) =>
   new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n);
 
 function CartItem({ item, onUpdateQty, onRemove }) {
+  const [confirmDel, setConfirmDel] = useState(false);
+
   return (
     <div className="flex flex-col md:flex-row gap-6 items-start group py-8 border-b border-outline-variant/20 last:border-b-0">
       {/* Cover */}
-      <Link to={`/libro/${item.bookId}`} className="w-full md:w-36 aspect-[2/3] bg-surface-low overflow-hidden rounded-lg shadow-md transition-transform duration-500 group-hover:scale-[1.02] flex-shrink-0">
+      <Link to={`/libro/${item.slug || item.bookId}`} className="w-full md:w-36 aspect-[2/3] bg-surface-low overflow-hidden rounded-lg shadow-md transition-transform duration-500 group-hover:scale-[1.02] flex-shrink-0">
         {item.imagen ? (
           <img src={item.imagen} alt={item.titulo} className="w-full h-full object-cover" />
         ) : (
@@ -23,7 +28,7 @@ function CartItem({ item, onUpdateQty, onRemove }) {
       <div className="flex-1 flex flex-col justify-between self-stretch py-1">
         <div className="flex justify-between items-start">
           <div>
-            <Link to={`/libro/${item.bookId}`} className="text-xl font-headline text-on-surface hover:text-primary transition-colors">
+            <Link to={`/libro/${item.slug || item.bookId}`} className="text-xl font-headline text-on-surface hover:text-primary transition-colors">
               {item.titulo}
             </Link>
             {item.autor && <p className="text-on-surface-variant text-sm mt-0.5">{item.autor}</p>}
@@ -42,13 +47,127 @@ function CartItem({ item, onUpdateQty, onRemove }) {
               <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             </button>
           </div>
-          {/* Remove */}
+          {/* Remove — con confirmación inline */}
+          {!confirmDel ? (
+            <button
+              onClick={() => setConfirmDel(true)}
+              className="flex items-center gap-2 text-on-surface-variant hover:text-error transition-colors text-xs uppercase tracking-widest font-semibold"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+              Eliminar
+            </button>
+          ) : (
+            <div className="flex items-center gap-2 text-xs">
+              <span className="text-on-surface-variant font-medium">¿Eliminar?</span>
+              <button onClick={() => onRemove(item.bookId)} className="font-bold text-error hover:underline uppercase tracking-widest">Sí</button>
+              <button onClick={() => setConfirmDel(false)} className="font-bold text-on-surface-variant hover:text-on-surface uppercase tracking-widest">No</button>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ConfirmModal({ title, message, confirmLabel, confirmClass, onConfirm, onCancel }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+      <div className="bg-surface rounded-2xl shadow-2xl p-8 max-w-sm w-full">
+        <h3 className="text-xl font-headline text-on-surface mb-3">{title}</h3>
+        <p className="text-on-surface-variant text-sm mb-8">{message}</p>
+        <div className="flex gap-3 justify-end">
           <button
-            onClick={() => onRemove(item.bookId)}
-            className="flex items-center gap-2 text-on-surface-variant hover:text-error transition-colors text-xs uppercase tracking-widest font-semibold"
+            onClick={onCancel}
+            className="px-6 py-3 text-sm font-bold uppercase tracking-widest text-on-surface-variant hover:text-on-surface transition-colors"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
-            Eliminar
+            Cancelar
+          </button>
+          <button
+            onClick={onConfirm}
+            className={`px-6 py-3 text-sm font-bold uppercase tracking-widest rounded-full transition-all active:scale-95 ${confirmClass}`}
+          >
+            {confirmLabel}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AddressModal({ user, isAllDigital, onConfirm, onCancel }) {
+  const savedAddress = user?.direccion || '';
+  const [useNew, setUseNew] = useState(!savedAddress);
+  const [nueva, setNueva] = useState('');
+  const [guardar, setGuardar] = useState(true);
+
+  const addressToUse = useNew ? nueva.trim() : savedAddress;
+  const canContinue = isAllDigital || !!addressToUse;
+
+  const handleConfirm = () => {
+    if (!canContinue) return;
+    onConfirm(isAllDigital ? null : addressToUse, useNew && guardar);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+      <div className="bg-surface rounded-2xl shadow-2xl p-6 max-w-sm w-full">
+        <div className="flex items-center gap-2 mb-4">
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-primary flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+            {isAllDigital
+              ? <><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></>
+              : <><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></>}
+          </svg>
+          <h3 className="text-lg font-headline text-on-surface">
+            {isAllDigital ? 'Confirmar compra digital' : 'Dirección de envío'}
+          </h3>
+        </div>
+
+        {isAllDigital ? (
+          <p className="text-sm text-on-surface-variant mb-6">
+            Estás comprando una edición digital. El enlace de descarga se enviará a <strong>{user?.email}</strong>.
+          </p>
+        ) : savedAddress && !useNew ? (
+          <div className="mb-4">
+            <p className="text-xs text-outline uppercase tracking-widest font-bold mb-2">Enviar a</p>
+            <div className="bg-surface-low rounded-lg px-4 py-3 text-sm text-on-surface flex items-start justify-between gap-3">
+              <span>{savedAddress}</span>
+              <button onClick={() => setUseNew(true)} className="text-primary text-xs font-bold hover:underline flex-shrink-0">Cambiar</button>
+            </div>
+          </div>
+        ) : (
+          <div className="mb-4">
+            {savedAddress && (
+              <button onClick={() => setUseNew(false)} className="text-xs text-primary font-bold hover:underline mb-2 block">
+                ← Usar dirección guardada
+              </button>
+            )}
+            <input
+              value={nueva}
+              onChange={(e) => setNueva(sanitize(e.target.value))}
+              maxLength={200}
+              className="w-full border border-outline-variant rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+              placeholder="Calle, número, depto — Ciudad, Provincia"
+              autoFocus
+            />
+            {user && (
+              <label className="flex items-center gap-2 text-xs text-on-surface-variant mt-2 cursor-pointer">
+                <input type="checkbox" checked={guardar} onChange={(e) => setGuardar(e.target.checked)} className="accent-primary" />
+                Guardar como dirección predeterminada
+              </label>
+            )}
+          </div>
+        )}
+
+        <div className="flex gap-2 justify-end mt-4">
+          <button onClick={onCancel} className="px-5 py-2.5 text-xs font-bold uppercase tracking-widest text-on-surface-variant hover:text-on-surface transition-colors">
+            Cancelar
+          </button>
+          <button
+            onClick={handleConfirm}
+            disabled={!canContinue}
+            className="px-5 py-2.5 text-xs font-bold uppercase tracking-widest bg-primary text-on-primary rounded-full hover:shadow-lg hover:shadow-primary/20 active:scale-95 transition-all disabled:opacity-40"
+          >
+            Continuar al pago
           </button>
         </div>
       </div>
@@ -57,13 +176,68 @@ function CartItem({ item, onUpdateQty, onRemove }) {
 }
 
 export default function CartPage() {
-  const { items, updateQty, removeItem, totalPrice } = useCart();
+  const { items, updateQty, removeItem, clearCart, totalPrice } = useCart();
+  const { user, isLoggedIn, updateProfile } = useUser();
+  const [showClearModal, setShowClearModal] = useState(false);
+  const [showCheckoutModal, setShowCheckoutModal] = useState(false);
+  const [showAddressModal, setShowAddressModal] = useState(false);
+
+  // Verdadero si TODOS los items del carrito son edición digital
+  const isAllDigital = items.length > 0 && items.every((i) => i.edicion === 'digital');
+
+  const handleCheckoutClick = () => {
+    // Digital: no hace falta dirección física
+    if (isAllDigital) { setShowAddressModal(true); return; }
+    // Logueado y con dirección: ir al modal de confirmación directamente
+    if (isLoggedIn && user?.direccion) { setShowCheckoutModal(true); return; }
+    // Sin dirección guardada: pedirla
+    setShowAddressModal(true);
+  };
+
+  const handleAddressConfirm = async (direccion, guardar) => {
+    if (guardar && updateProfile) {
+      try { await updateProfile({ direccion }); } catch (_) { /* no bloqueamos el flujo */ }
+    }
+    setShowAddressModal(false);
+    setShowCheckoutModal(true);
+  };
 
   return (
     <div className="min-h-screen bg-surface">
       <Navbar />
 
-      <main className="max-w-screen-xl mx-auto px-8 py-16 pt-28">
+      {showAddressModal && (
+        <AddressModal
+          user={user}
+          isAllDigital={isAllDigital}
+          onConfirm={handleAddressConfirm}
+          onCancel={() => setShowAddressModal(false)}
+        />
+      )}
+
+      {showClearModal && (
+        <ConfirmModal
+          title="¿Vaciar el carrito?"
+          message="Se eliminarán todos los libros seleccionados. Esta acción no se puede deshacer."
+          confirmLabel="Sí, vaciar"
+          confirmClass="bg-primary-container text-primary hover:bg-primary-container/70"
+          onConfirm={() => { clearCart(); setShowClearModal(false); }}
+          onCancel={() => setShowClearModal(false)}
+        />
+      )}
+
+      {showCheckoutModal && (
+        <ConfirmModal
+          title="Confirmar compra"
+          message={`Estás a punto de finalizar tu pedido por ${formatPeso(totalPrice)}. ¿Continuás con el pago?`}
+          confirmLabel="Continuar al pago"
+          confirmClass="bg-primary text-on-primary hover:shadow-lg hover:shadow-primary/20"
+          onConfirm={() => { setShowCheckoutModal(false); /* TODO: MercadoPago */ }}
+          onCancel={() => setShowCheckoutModal(false)}
+        />
+      )}
+
+      <main className="max-w-screen-xl mx-auto px-8 py-16 pt-36">
         <header className="mb-12">
           <h1 className="text-4xl md:text-5xl font-headline text-on-surface tracking-tight italic">Tu Carrito de Lectura</h1>
           <p className="text-on-surface-variant mt-2 max-w-lg">
@@ -89,11 +263,18 @@ export default function CartPage() {
               {items.map((item) => (
                 <CartItem key={item.bookId} item={item} onUpdateQty={updateQty} onRemove={removeItem} />
               ))}
-              <div className="pt-8">
+              <div className="pt-8 flex items-center justify-between">
                 <Link to="/" className="inline-flex items-center gap-3 text-secondary font-medium hover:gap-5 transition-all">
                   <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
                   Continuar Explorando el Catálogo
                 </Link>
+                <button
+                  onClick={() => setShowClearModal(true)}
+                  className="flex items-center gap-2 text-on-surface-variant hover:text-error transition-colors text-xs font-bold uppercase tracking-widest"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                  Vaciar carrito
+                </button>
               </div>
             </div>
 
@@ -118,7 +299,10 @@ export default function CartPage() {
                     <span className="text-[10px] text-on-surface-variant uppercase tracking-widest">IVA incluido</span>
                   </div>
                 </div>
-                <button className="w-full py-5 bg-primary text-on-primary rounded-full font-bold uppercase tracking-widest text-sm flex items-center justify-center gap-3 hover:shadow-lg hover:shadow-primary/20 active:scale-95 transition-all">
+                <button
+                  onClick={handleCheckoutClick}
+                  className="w-full py-5 bg-primary text-on-primary rounded-full font-bold uppercase tracking-widest text-sm flex items-center justify-center gap-3 hover:shadow-lg hover:shadow-primary/20 active:scale-95 transition-all"
+                >
                   Finalizar Compra
                   <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                 </button>

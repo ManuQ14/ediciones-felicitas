@@ -27,8 +27,8 @@ export default function LoginPage() {
     <div className="min-h-screen bg-surface-low flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-headline font-bold text-primary italic">Ediciones Felicitas</h1>
-          <p className="text-on-surface-variant text-sm mt-2">Panel de administración</p>
+          <img src="/logo-ef.png" alt="Ediciones Felicitas" className="h-24 mx-auto mb-4" />
+          <p className="text-on-surface-variant text-xs font-bold uppercase tracking-widest">Panel de administración</p>
         </div>
 
         <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-sm border border-outline-variant p-8 space-y-5">

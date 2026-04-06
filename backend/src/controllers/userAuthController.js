@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'ef-dev-secret-2024';
@@ -51,4 +52,64 @@ const me = async (req, res) => {
   }
 };
 
-module.exports = { register, login, me };
+const updateProfile = async (req, res) => {
+  try {
+    const user = await User.findByPk(req.user.id);
+    if (!user) return res.status(404).json({ error: 'Usuario no encontrado' });
+
+    const { nombre, email, telefono, direccion } = req.body;
+
+    if (email && email !== user.email) {
+      const existing = await User.findOne({ where: { email } });
+      if (existing) return res.status(400).json({ error: 'Ese email ya está en uso' });
+    }
+
+    await user.update({
+      nombre: nombre || user.nombre,
+      email: email || user.email,
+      telefono: telefono !== undefined ? telefono : user.telefono,
+      direccion: direccion !== undefined ? direccion : user.direccion,
+    });
+
+    res.json(user.toSafeJSON());
+  } catch (error) {
+    res.status(500).json({ error: 'Error al actualizar perfil' });
+  }
+};
+
+const changePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ error: 'Se requieren ambas contraseñas' });
+    }
+    if (newPassword.length < 6) {
+      return res.status(400).json({ error: 'La nueva contraseña debe tener al menos 6 caracteres' });
+    }
+    const user = await User.findByPk(req.user.id);
+    if (!user) return res.status(404).json({ error: 'Usuario no encontrado' });
+    const isValid = await user.checkPassword(currentPassword);
+    if (!isValid) return res.status(400).json({ error: 'La contraseña actual es incorrecta' });
+    await user.update({ password: await bcrypt.hash(newPassword, 10) });
+    res.json({ message: 'Contraseña actualizada correctamente' });
+  } catch {
+    res.status(500).json({ error: 'Error al cambiar la contraseña' });
+  }
+};
+
+const deleteAccount = async (req, res) => {
+  try {
+    const { password } = req.body;
+    if (!password) return res.status(400).json({ error: 'Se requiere la contraseña para confirmar' });
+    const user = await User.findByPk(req.user.id);
+    if (!user) return res.status(404).json({ error: 'Usuario no encontrado' });
+    const isValid = await user.checkPassword(password);
+    if (!isValid) return res.status(400).json({ error: 'Contraseña incorrecta' });
+    await user.destroy();
+    res.json({ message: 'Cuenta eliminada correctamente' });
+  } catch {
+    res.status(500).json({ error: 'Error al eliminar la cuenta' });
+  }
+};
+
+module.exports = { register, login, me, updateProfile, changePassword, deleteAccount };

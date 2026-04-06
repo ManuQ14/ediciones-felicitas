@@ -17,13 +17,22 @@
   --color-outline-variant: #ccc3d3;
   --color-primary-container: #eaddff;
   --color-on-primary: #ffffff;
+  --color-on-tertiary: #ffffff;
   --color-error: #ba1a1a;
+}
+
+html {
+  font-size: 16px;
 }
 
 body {
   font-family: var(--font-body);
   background-color: var(--color-surface);
   color: var(--color-on-surface);
+}
+
+button, [role="button"] {
+  cursor: pointer;
 }
 
 h1, h2, h3, .serif {

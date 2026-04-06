@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '../components/layout/Navbar';
 import Spinner from '../components/ui/Spinner';
+import ErrorPage from './ErrorPage';
 import api from '../services/api';
 
 const formatPeso = (n) =>
@@ -9,7 +10,7 @@ const formatPeso = (n) =>
 
 function BookCard({ book }) {
   return (
-    <Link to={`/libro/${book.id}`} className="group cursor-pointer block">
+    <Link to={`/libro/${book.slug || book.id}`} className="group cursor-pointer block">
       <div className="aspect-[2/3] bg-surface-high rounded-lg mb-4 overflow-hidden relative shadow-sm group-hover:shadow-xl transition-all duration-500 transform group-hover:-translate-y-1">
         {book.imagen ? (
           <img src={book.imagen} alt={book.titulo} className="w-full h-full object-cover" />
@@ -36,14 +37,22 @@ function BookCard({ book }) {
 export default function CatalogPage() {
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [search, setSearch] = useState('');
   const [categoria, setCategoria] = useState('');
 
-  useEffect(() => {
+  const fetchBooks = useCallback(() => {
+    setLoading(true);
+    setError(false);
     api.get('/books')
       .then(({ data }) => setBooks(data))
+      .catch(() => setError(true))
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => { fetchBooks(); }, [fetchBooks]);
+
+  if (error) return <ErrorPage onRetry={fetchBooks} />;
 
   const categorias = [...new Set(books.map((b) => b.categoria).filter(Boolean))];
 
@@ -59,7 +68,7 @@ export default function CatalogPage() {
       <Navbar />
 
       {/* Hero */}
-      <section className="pt-20 bg-surface-low">
+      <section className="pt-28 bg-surface-low">
         <div className="max-w-screen-xl mx-auto px-8 py-20 text-center">
           <h1 className="text-5xl md:text-6xl font-headline font-bold text-primary tracking-tight leading-tight mb-4">
             Ediciones Felicitas
@@ -113,9 +122,9 @@ export default function CatalogPage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-outline-variant/30 py-10 mt-8">
+      <footer className="border-t border-outline-variant/30 py-12 mt-8">
         <div className="max-w-screen-xl mx-auto px-8 text-center text-on-surface-variant text-sm">
-          <p className="font-headline italic text-primary text-lg mb-2">Ediciones Felicitas</p>
+          <img src="/logo-ef.png" alt="Ediciones Felicitas" className="h-20 mx-auto mb-4 opacity-80" />
           <p>© {new Date().getFullYear()} Todos los derechos reservados.</p>
         </div>
       </footer>

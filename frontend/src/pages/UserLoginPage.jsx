@@ -30,7 +30,7 @@ export default function UserLoginPage() {
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <Link to="/">
-            <img src="/logo-ef.png" alt="Ediciones Felicitas" className="h-12 mx-auto mb-4" />
+            <img src="/logo-ef.png" alt="Ediciones Felicitas" className="h-24 mx-auto mb-6" />
           </Link>
           <p className="text-on-surface-variant text-sm">Iniciá sesión en tu cuenta</p>
         </div>

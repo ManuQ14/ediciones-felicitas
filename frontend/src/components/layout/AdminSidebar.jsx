@@ -12,15 +12,6 @@ const navItems = [
     ),
     label: 'Inventario',
   },
-  {
-    to: '/admin/nuevo',
-    icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>
-      </svg>
-    ),
-    label: 'Añadir Libro',
-  },
 ];
 
 export default function AdminSidebar() {
@@ -40,9 +31,9 @@ export default function AdminSidebar() {
   return (
     <aside className="h-screen w-64 fixed left-0 top-0 bg-surface flex flex-col py-8 pr-4 z-50 border-r border-outline-variant/20">
       {/* Logo */}
-      <div className="px-6 mb-12">
-        <h1 className="font-headline text-lg text-primary italic">Ediciones Felicitas</h1>
-        <p className="text-xs uppercase tracking-widest text-outline mt-1">Panel Admin</p>
+      <div className="px-6 mb-10 flex flex-col items-start gap-2">
+        <img src="/logo-ef.png" alt="Ediciones Felicitas" className="h-14" />
+        <span className="text-[0.625rem] font-bold uppercase tracking-widest text-outline">Panel Admin</span>
       </div>
 
       {/* Nav */}
