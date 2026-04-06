@@ -35,7 +35,7 @@ export default function BookTable({ books, onEdit, onDelete }) {
           <tr className="bg-surface-low text-on-surface-variant border-b border-outline-variant/20">
             <th className="px-8 py-5 text-[10px] uppercase tracking-widest font-semibold">Portada</th>
             <th className="px-6 py-5 text-[10px] uppercase tracking-widest font-semibold">Título & Autor</th>
-            <th className="px-6 py-5 text-[10px] uppercase tracking-widest font-semibold hidden md:table-cell">Categoría</th>
+            <th className="px-6 py-5 text-[10px] uppercase tracking-widest font-semibold hidden md:table-cell">Género</th>
             <th className="px-6 py-5 text-[10px] uppercase tracking-widest font-semibold text-right">Precio</th>
             <th className="px-6 py-5 text-[10px] uppercase tracking-widest font-semibold text-center hidden lg:table-cell">Stock</th>
             <th className="px-6 py-5 text-[10px] uppercase tracking-widest font-semibold text-center">Estado</th>

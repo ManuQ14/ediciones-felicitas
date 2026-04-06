@@ -122,7 +122,7 @@ export default function CatalogPage() {
               onChange={(e) => setCategoria(e.target.value)}
               className="border-none focus:outline-none text-sm text-on-surface-variant bg-transparent px-4 py-2"
             >
-              <option value="">Todas las categorías</option>
+              <option value="">Todos los géneros</option>
               {categorias.map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
@@ -131,13 +131,25 @@ export default function CatalogPage() {
 
       {/* Catalog */}
       <section className="max-w-screen-xl mx-auto px-8 py-16">
-        <div className="flex justify-between items-end mb-10">
+        <div className="flex justify-between items-end mb-6">
           <div>
             <span className="text-tertiary font-bold tracking-widest uppercase text-xs">Colección</span>
             <h2 className="text-3xl font-headline font-bold text-on-surface mt-1">Nuestros libros</h2>
           </div>
           <span className="text-on-surface-variant text-sm">{filtered.length} libro{filtered.length !== 1 ? 's' : ''}</span>
         </div>
+
+        {categoria && (
+          <div className="flex items-center gap-2 mb-8">
+            <span className="text-xs text-on-surface-variant">Filtrando por:</span>
+            <span className="inline-flex items-center gap-1.5 bg-primary/10 text-primary text-xs font-semibold px-3 py-1.5 rounded-full">
+              {categoria}
+              <button onClick={() => setCategoria('')} className="hover:text-primary/60 transition-colors" aria-label="Quitar filtro">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </span>
+          </div>
+        )}
 
         {loading ? (
           <Spinner />

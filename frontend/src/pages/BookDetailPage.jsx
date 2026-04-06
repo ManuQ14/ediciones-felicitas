@@ -106,10 +106,12 @@ export default function BookDetailPage() {
                   <span className="font-mono text-sm text-on-surface">{book.isbn}</span>
                 </div>
               )}
-              <div className="flex flex-col">
-                <span className="text-[10px] text-tertiary uppercase tracking-widest font-bold mb-1">Formato</span>
-                <span className="font-headline text-lg text-on-surface">Tapa blanda</span>
-              </div>
+              {book.paginas && (
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-tertiary uppercase tracking-widest font-bold mb-1">Páginas</span>
+                  <span className="font-headline text-lg text-on-surface">{book.paginas}</span>
+                </div>
+              )}
               <div className="flex flex-col">
                 <span className="text-[10px] text-tertiary uppercase tracking-widest font-bold mb-1">Editorial</span>
                 <span className="font-headline text-lg text-on-surface">Ediciones Felicitas</span>

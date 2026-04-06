@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import api from '../../services/api';
 import { makeSanitizedHandler } from '../../utils/sanitize';
 
-const EMPTY = { titulo: '', isbn: '', precio: '', autor: '', categoria: '', imagen: '', archivoDigital: '', tieneDigital: false, stock: 0 };
+const EMPTY = { titulo: '', isbn: '', precio: '', autor: '', categoria: '', imagen: '', archivoDigital: '', tieneDigital: false, stock: 0, paginas: '' };
 
 const CATEGORIAS = [
   'Narrativa', 'Poesía', 'Historia', 'Biografía',
@@ -69,6 +69,7 @@ export default function BookForm({ book, onSubmit, onCancel, loading, onFormChan
           archivoDigital: book.archivoDigital || '',
           tieneDigital: book.tieneDigital ?? false,
           stock: book.stock ?? 0,
+          paginas: book.paginas || '',
         }
       : EMPTY
     );
@@ -136,9 +137,9 @@ export default function BookForm({ book, onSubmit, onCancel, loading, onFormChan
             <input name="autor" value={form.autor} onChange={handleChange} maxLength={100} className={inputClass} placeholder="Nombre del autor" />
           </div>
           <div>
-            <label className={labelClass}>Categoría</label>
+            <label className={labelClass}>Género</label>
             <select name="categoria" value={form.categoria} onChange={handleChange} className={`${inputClass} appearance-none`}>
-              <option value="">Sin categoría</option>
+              <option value="">Sin género</option>
               {CATEGORIAS.map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
@@ -172,6 +173,19 @@ export default function BookForm({ book, onSubmit, onCancel, loading, onFormChan
               placeholder="0"
             />
           </div>
+        </div>
+
+        <div>
+          <label className={labelClass}>Número de páginas</label>
+          <input
+            name="paginas"
+            type="number"
+            min="1"
+            value={form.paginas}
+            onChange={handleChange}
+            className={`${inputClass} font-headline text-xl`}
+            placeholder="320"
+          />
         </div>
 
         <div>
