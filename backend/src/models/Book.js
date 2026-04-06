@@ -43,6 +43,11 @@ const Book = sequelize.define('Book', {
     allowNull: true,
     comment: 'Ruta al archivo digital (PDF/epub) para descarga post-pago',
   },
+  stock: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0,
+    allowNull: false,
+  },
   activo: {
     type: DataTypes.BOOLEAN,
     defaultValue: true,

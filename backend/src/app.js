@@ -81,6 +81,17 @@ const startServer = async () => {
   try {
     await sequelize.authenticate();
     console.log('Database connected successfully.');
+
+    // SQLite deja tablas _backup residuales cuando un ALTER TABLE falla a mitad.
+    // Las limpiamos antes de sync para evitar SequelizeUniqueConstraintError.
+    if (process.env.NODE_ENV !== 'production') {
+      const dialect = sequelize.getDialect();
+      if (dialect === 'sqlite') {
+        await sequelize.query('DROP TABLE IF EXISTS `Users_backup`');
+        await sequelize.query('DROP TABLE IF EXISTS `Books_backup`');
+      }
+    }
+
     await sequelize.sync({ alter: true });
     app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
   } catch (error) {

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import api from '../../services/api';
 import { makeSanitizedHandler } from '../../utils/sanitize';
 
-const EMPTY = { titulo: '', isbn: '', precio: '', autor: '', categoria: '', imagen: '', archivoDigital: '', tieneDigital: false };
+const EMPTY = { titulo: '', isbn: '', precio: '', autor: '', categoria: '', imagen: '', archivoDigital: '', tieneDigital: false, stock: 0 };
 
 const CATEGORIAS = [
   'Narrativa', 'Poesía', 'Historia', 'Biografía',
@@ -53,7 +53,7 @@ function FileUploadField({ label, accept, type, value, onChange, hint }) {
   );
 }
 
-export default function BookForm({ book, onSubmit, onCancel, loading }) {
+export default function BookForm({ book, onSubmit, onCancel, loading, onFormChange }) {
   const [form, setForm] = useState(EMPTY);
   const [error, setError] = useState('');
 
@@ -68,13 +68,15 @@ export default function BookForm({ book, onSubmit, onCancel, loading }) {
           imagen: book.imagen || '',
           archivoDigital: book.archivoDigital || '',
           tieneDigital: book.tieneDigital ?? false,
+          stock: book.stock ?? 0,
         }
       : EMPTY
     );
     setError('');
   }, [book]);
 
-  const handleChange = makeSanitizedHandler(setForm);
+  const baseHandleChange = makeSanitizedHandler(setForm);
+  const handleChange = (e) => { baseHandleChange(e); onFormChange?.(); };
   const clearError = () => setError('');
 
   const handleSubmit = (e) => {
@@ -107,7 +109,7 @@ export default function BookForm({ book, onSubmit, onCancel, loading }) {
             accept="image/jpeg,image/png,image/webp"
             type="libros"
             value={form.imagen}
-            onChange={(url) => setForm((f) => ({ ...f, imagen: url }))}
+            onChange={(url) => { setForm((f) => ({ ...f, imagen: url })); onFormChange?.(); }}
             hint="JPG, PNG o WebP — máx. 15 MB"
           />
         </div>
@@ -159,16 +161,29 @@ export default function BookForm({ book, onSubmit, onCancel, loading }) {
             </div>
           </div>
           <div>
-            <label className={labelClass}>ISBN</label>
+            <label className={labelClass}>Stock disponible</label>
             <input
-              name="isbn"
-              value={form.isbn}
+              name="stock"
+              type="number"
+              min="0"
+              value={form.stock}
               onChange={handleChange}
-              maxLength={20}
-              className="w-full bg-transparent border-b-2 border-outline-variant px-2 py-3 font-mono text-sm text-on-surface-variant focus:border-primary transition-colors outline-none"
-              placeholder="978-987-..."
+              className={`${inputClass} font-headline text-xl`}
+              placeholder="0"
             />
           </div>
+        </div>
+
+        <div>
+          <label className={labelClass}>ISBN</label>
+          <input
+            name="isbn"
+            value={form.isbn}
+            onChange={handleChange}
+            maxLength={20}
+            className="w-full bg-transparent border-b-2 border-outline-variant px-2 py-3 font-mono text-sm text-on-surface-variant focus:border-primary transition-colors outline-none"
+            placeholder="978-987-..."
+          />
         </div>
 
         {/* Edición digital */}
@@ -197,7 +212,7 @@ export default function BookForm({ book, onSubmit, onCancel, loading }) {
               accept=".pdf,.epub"
               type="digital"
               value={form.archivoDigital}
-              onChange={(url) => setForm((f) => ({ ...f, archivoDigital: url }))}
+              onChange={(url) => { setForm((f) => ({ ...f, archivoDigital: url })); onFormChange?.(); }}
               hint="El comprador recibirá este archivo post-pago — máx. 50 MB"
             />
             {form.archivoDigital && (

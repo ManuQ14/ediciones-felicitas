@@ -13,18 +13,28 @@ export default function AdminBooksPage({ openForm: openFormProp = false }) {
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [toastMsg, setToastMsg] = useState('');   // mensaje flotante (éxito o error)
+  const [toastType, setToastType] = useState('error'); // 'error' | 'success'
 
   const [showForm, setShowForm] = useState(openFormProp);
   const [editingBook, setEditingBook] = useState(null);
   const [deletingBook, setDeletingBook] = useState(null);
   const [search, setSearch] = useState('');
+  const [formTouched, setFormTouched] = useState(false);
+  const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
+
+  const showToast = (msg, type = 'error') => {
+    setToastMsg(msg);
+    setToastType(type);
+    setTimeout(() => setToastMsg(''), 4000);
+  };
 
   const fetchBooks = useCallback(async () => {
     try {
       const { data } = await api.get('/books/admin');
       setBooks(data);
     } catch {
-      alert('Error al cargar los libros');
+      showToast('No se pudieron cargar los libros. Verificá la conexión.');
     } finally {
       setLoading(false);
     }
@@ -32,8 +42,26 @@ export default function AdminBooksPage({ openForm: openFormProp = false }) {
 
   useEffect(() => { fetchBooks(); }, [fetchBooks]);
 
-  const handleEdit = (book) => { setEditingBook(book); setShowForm(true); };
+  const handleEdit = (book) => { setEditingBook(book); setShowForm(true); setFormTouched(false); };
   const handleDelete = (book) => setDeletingBook(book);
+
+  // Intento de cerrar el formulario: pide confirmación si hay cambios sin guardar
+  const handleCloseForm = () => {
+    if (formTouched) {
+      setShowDiscardConfirm(true);
+    } else {
+      setShowForm(false);
+      setEditingBook(null);
+      setFormTouched(false);
+    }
+  };
+
+  const handleConfirmDiscard = () => {
+    setShowForm(false);
+    setEditingBook(null);
+    setFormTouched(false);
+    setShowDiscardConfirm(false);
+  };
 
   const handleFormSubmit = async (formData) => {
     setSaving(true);
@@ -45,9 +73,11 @@ export default function AdminBooksPage({ openForm: openFormProp = false }) {
       }
       setShowForm(false);
       setEditingBook(null);
+      setFormTouched(false);
       await fetchBooks();
+      showToast(editingBook ? 'Libro actualizado correctamente.' : 'Libro creado correctamente.', 'success');
     } catch (err) {
-      alert(err.response?.data?.error || 'Error al guardar');
+      showToast(err.response?.data?.error || 'Error al guardar el libro.');
     } finally {
       setSaving(false);
     }
@@ -59,15 +89,19 @@ export default function AdminBooksPage({ openForm: openFormProp = false }) {
       await api.delete(`/books/${deletingBook.id}`);
       setDeletingBook(null);
       await fetchBooks();
+      showToast('Libro desactivado.', 'success');
     } catch {
-      alert('Error al desactivar el libro');
+      showToast('Error al desactivar el libro.');
     } finally {
       setSaving(false);
     }
   };
 
   const activeBooks = books.filter((b) => b.activo);
-  const totalValuation = activeBooks.reduce((sum, b) => sum + Number(b.precio), 0);
+  const sinStock = activeBooks.filter((b) => Number(b.stock ?? 0) === 0).length;
+  const avgPrice = activeBooks.length
+    ? activeBooks.reduce((sum, b) => sum + Number(b.precio), 0) / activeBooks.length
+    : 0;
 
   const filtered = books.filter(
     (b) =>
@@ -84,7 +118,7 @@ export default function AdminBooksPage({ openForm: openFormProp = false }) {
           <p className="text-on-surface-variant mt-2">Gestioná el catálogo de libros de Ediciones Felicitas.</p>
         </div>
         <button
-          onClick={() => { setEditingBook(null); setShowForm(true); }}
+          onClick={() => { setEditingBook(null); setShowForm(true); setFormTouched(false); }}
           className="flex items-center gap-3 bg-primary text-on-primary px-8 py-4 rounded-full font-bold hover:shadow-lg hover:shadow-primary/20 active:scale-95 transition-all"
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -93,26 +127,27 @@ export default function AdminBooksPage({ openForm: openFormProp = false }) {
       </header>
 
       {/* Stats bar */}
-      <div className="grid grid-cols-12 gap-6 mb-10">
-        <div className="col-span-12 md:col-span-8 flex gap-12 p-8 bg-surface-low rounded-xl">
-          <div>
-            <span className="block text-[10px] uppercase tracking-widest text-on-surface-variant mb-1">Total títulos</span>
-            <span className="text-3xl font-headline italic text-primary">{books.length}</span>
-          </div>
-          <div>
-            <span className="block text-[10px] uppercase tracking-widest text-on-surface-variant mb-1">Activos</span>
-            <span className="text-3xl font-headline italic text-on-surface">{activeBooks.length}</span>
-          </div>
-          <div>
-            <span className="block text-[10px] uppercase tracking-widest text-on-surface-variant mb-1">Valuación</span>
-            <span className="text-3xl font-headline italic text-on-surface">{formatPeso(totalValuation)}</span>
-          </div>
+      <div className="flex flex-wrap gap-6 mb-10 p-8 bg-surface-low rounded-xl">
+        <div className="flex flex-col gap-1">
+          <span className="text-[10px] uppercase tracking-widest text-on-surface-variant">Total títulos</span>
+          <span className="text-3xl font-headline italic text-primary">{books.length}</span>
         </div>
-        <div className="col-span-12 md:col-span-4 flex items-center justify-center p-8 bg-tertiary text-on-tertiary rounded-xl relative overflow-hidden group">
-          <div className="relative z-10 text-center">
-            <p className="text-xs uppercase tracking-widest opacity-80 mb-1">Editorial</p>
-            <p className="text-xl font-headline italic leading-tight">Ediciones Felicitas</p>
-          </div>
+        <div className="w-px bg-outline-variant/30 self-stretch hidden sm:block" />
+        <div className="flex flex-col gap-1">
+          <span className="text-[10px] uppercase tracking-widest text-on-surface-variant">Activos</span>
+          <span className="text-3xl font-headline italic text-on-surface">{activeBooks.length}</span>
+        </div>
+        <div className="w-px bg-outline-variant/30 self-stretch hidden sm:block" />
+        <div className="flex flex-col gap-1">
+          <span className="text-[10px] uppercase tracking-widest text-on-surface-variant">Sin stock</span>
+          <span className={`text-3xl font-headline italic ${sinStock > 0 ? 'text-error' : 'text-on-surface'}`}>
+            {sinStock}
+          </span>
+        </div>
+        <div className="w-px bg-outline-variant/30 self-stretch hidden sm:block" />
+        <div className="flex flex-col gap-1">
+          <span className="text-[10px] uppercase tracking-widest text-on-surface-variant">Precio promedio</span>
+          <span className="text-3xl font-headline italic text-on-surface">{formatPeso(avgPrice)}</span>
         </div>
       </div>
 
@@ -142,7 +177,7 @@ export default function AdminBooksPage({ openForm: openFormProp = false }) {
       {/* Form Modal */}
       {showForm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl mx-4 max-h-[92vh] overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl mx-4 max-h-[92vh] overflow-y-auto relative">
             <div className="p-10">
               {/* Modal header */}
               <div className="flex justify-between items-start mb-8">
@@ -157,7 +192,7 @@ export default function AdminBooksPage({ openForm: openFormProp = false }) {
                   )}
                 </div>
                 <button
-                  onClick={() => { setShowForm(false); setEditingBook(null); }}
+                  onClick={handleCloseForm}
                   className="text-on-surface-variant hover:text-on-surface p-2 rounded-full hover:bg-surface-low transition-colors"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -166,10 +201,38 @@ export default function AdminBooksPage({ openForm: openFormProp = false }) {
               <BookForm
                 book={editingBook}
                 onSubmit={handleFormSubmit}
-                onCancel={() => { setShowForm(false); setEditingBook(null); }}
+                onCancel={handleCloseForm}
                 loading={saving}
+                onFormChange={() => setFormTouched(true)}
               />
             </div>
+
+            {/* Discard confirmation overlay */}
+            {showDiscardConfirm && (
+              <div className="absolute inset-0 bg-black/50 rounded-2xl flex items-center justify-center z-10 backdrop-blur-sm">
+                <div className="bg-white rounded-2xl p-8 max-w-sm mx-6 text-center shadow-2xl">
+                  <div className="w-12 h-12 rounded-full bg-error/10 flex items-center justify-center mx-auto mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-error" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                  </div>
+                  <h4 className="font-headline text-xl font-bold text-on-surface mb-2">¿Descartás los cambios?</h4>
+                  <p className="text-sm text-on-surface-variant mb-6">Los datos modificados se perderán.</p>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => setShowDiscardConfirm(false)}
+                      className="flex-1 border border-outline-variant text-on-surface-variant font-medium py-3 px-4 rounded-full hover:bg-surface-low transition-colors text-sm"
+                    >
+                      Seguir editando
+                    </button>
+                    <button
+                      onClick={handleConfirmDiscard}
+                      className="flex-1 bg-error text-white font-bold py-3 px-4 rounded-full hover:opacity-90 active:scale-95 transition-all text-sm"
+                    >
+                      Sí, descartar
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -181,6 +244,18 @@ export default function AdminBooksPage({ openForm: openFormProp = false }) {
         onCancel={() => setDeletingBook(null)}
         loading={saving}
       />
+
+      {/* Toast notification */}
+      {toastMsg && (
+        <div className={`fixed bottom-8 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-3 px-6 py-4 rounded-full shadow-2xl text-sm font-medium transition-all ${toastType === 'success' ? 'bg-tertiary text-white' : 'bg-error text-white'}`}>
+          {toastType === 'success' ? (
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          ) : (
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          )}
+          {toastMsg}
+        </div>
+      )}
     </AdminLayout>
   );
 }

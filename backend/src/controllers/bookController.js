@@ -62,10 +62,10 @@ const getBookBySlug = async (req, res) => {
 
 const createBook = async (req, res) => {
   try {
-    const { titulo, isbn, precio, autor, categoria, imagen, tieneDigital, archivoDigital } = req.body;
+    const { titulo, isbn, precio, autor, categoria, imagen, tieneDigital, archivoDigital, stock } = req.body;
     if (!titulo || !precio) return res.status(400).json({ error: 'Título y precio son obligatorios' });
     const slug = await generateUniqueSlug(titulo);
-    const book = await Book.create({ titulo, isbn, precio, autor, categoria, imagen, tieneDigital, archivoDigital, slug });
+    const book = await Book.create({ titulo, isbn, precio, autor, categoria, imagen, tieneDigital, archivoDigital, slug, stock: stock ?? 0 });
     res.status(201).json(book);
   } catch (error) {
     if (error.name === 'SequelizeUniqueConstraintError') {
@@ -79,11 +79,11 @@ const updateBook = async (req, res) => {
   try {
     const book = await Book.findByPk(req.params.id);
     if (!book) return res.status(404).json({ error: 'Libro no encontrado' });
-    const { titulo, isbn, precio, autor, categoria, imagen, activo, tieneDigital, archivoDigital } = req.body;
+    const { titulo, isbn, precio, autor, categoria, imagen, activo, tieneDigital, archivoDigital, stock } = req.body;
     const newSlug = titulo && titulo !== book.titulo
       ? await generateUniqueSlug(titulo, book.id)
       : book.slug;
-    await book.update({ titulo, isbn, precio, autor, categoria, imagen, activo, tieneDigital, archivoDigital, slug: newSlug });
+    await book.update({ titulo, isbn, precio, autor, categoria, imagen, activo, tieneDigital, archivoDigital, slug: newSlug, ...(stock !== undefined && { stock }) });
     res.json(book);
   } catch (error) {
     if (error.name === 'SequelizeUniqueConstraintError') {

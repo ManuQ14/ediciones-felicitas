@@ -6,6 +6,19 @@ function StockDot({ activo }) {
   return <div className="w-2 h-2 rounded-full bg-green-500" />;
 }
 
+function StockBadge({ stock }) {
+  const n = Number(stock ?? 0);
+  if (n === 0) return (
+    <span className="inline-block bg-error/10 text-error text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">Sin stock</span>
+  );
+  if (n <= 3) return (
+    <span className="inline-block bg-amber-100 text-amber-700 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">{n} uds.</span>
+  );
+  return (
+    <span className="inline-block bg-green-100 text-green-700 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">{n} uds.</span>
+  );
+}
+
 export default function BookTable({ books, onEdit, onDelete }) {
   if (books.length === 0) {
     return (
@@ -24,6 +37,7 @@ export default function BookTable({ books, onEdit, onDelete }) {
             <th className="px-6 py-5 text-[10px] uppercase tracking-widest font-semibold">Título & Autor</th>
             <th className="px-6 py-5 text-[10px] uppercase tracking-widest font-semibold hidden md:table-cell">Categoría</th>
             <th className="px-6 py-5 text-[10px] uppercase tracking-widest font-semibold text-right">Precio</th>
+            <th className="px-6 py-5 text-[10px] uppercase tracking-widest font-semibold text-center hidden lg:table-cell">Stock</th>
             <th className="px-6 py-5 text-[10px] uppercase tracking-widest font-semibold text-center">Estado</th>
             <th className="px-8 py-5 text-[10px] uppercase tracking-widest font-semibold text-right">Acciones</th>
           </tr>
@@ -73,6 +87,11 @@ export default function BookTable({ books, onEdit, onDelete }) {
               {/* Price */}
               <td className="px-6 py-5 text-right">
                 <span className="font-headline text-primary font-bold">{formatPeso(book.precio)}</span>
+              </td>
+
+              {/* Stock */}
+              <td className="px-6 py-5 text-center hidden lg:table-cell">
+                <StockBadge stock={book.stock} />
               </td>
 
               {/* Estado */}
