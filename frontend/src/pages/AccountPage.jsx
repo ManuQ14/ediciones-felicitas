@@ -1,11 +1,143 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Navbar from '../components/layout/Navbar';
 import { useUser } from '../context/UserContext';
 import { makeSanitizedHandler, sanitize } from '../utils/sanitize';
+import api from '../services/api';
 
 const inputClass = 'w-full bg-surface border border-outline-variant rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors';
 const labelClass = 'block text-[0.625rem] font-bold uppercase tracking-widest text-outline mb-2';
+
+const formatPeso = (n) =>
+  new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n);
+
+function OrderStatusBadge({ status }) {
+  const map = {
+    approved:   { label: 'Aprobado',   cls: 'bg-tertiary/10 text-tertiary' },
+    pending:    { label: 'Pendiente',  cls: 'bg-amber-100 text-amber-700' },
+    in_process: { label: 'En proceso', cls: 'bg-blue-100 text-blue-700' },
+    rejected:   { label: 'Rechazado',  cls: 'bg-error/10 text-error' },
+    cancelled:  { label: 'Cancelado',  cls: 'bg-surface-high text-on-surface-variant' },
+  };
+  const { label, cls } = map[status] || { label: status, cls: 'bg-surface-high text-on-surface-variant' };
+  return (
+    <span className={`inline-block text-xs font-semibold px-3 py-1 rounded-full ${cls}`}>
+      {label}
+    </span>
+  );
+}
+
+function OrdersSection() {
+  const [orders, setOrders] = useState([]);
+  const [ordersLoading, setOrdersLoading] = useState(true);
+  const [ordersError, setOrdersError] = useState('');
+  const [expandedId, setExpandedId] = useState(null);
+
+  useEffect(() => {
+    setOrdersLoading(true);
+    setOrdersError('');
+    api.get('/orders/my')
+      .then(({ data }) => setOrders(data))
+      .catch(() => setOrdersError('No se pudieron cargar tus pedidos. Intentá de nuevo.'))
+      .finally(() => setOrdersLoading(false));
+  }, []);
+
+  if (ordersLoading) {
+    return (
+      <div className="flex justify-center py-16">
+        <svg className="w-8 h-8 animate-spin text-primary/40" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+        </svg>
+      </div>
+    );
+  }
+
+  if (ordersError) {
+    return <p className="text-error text-sm py-8 text-center">{ordersError}</p>;
+  }
+
+  if (orders.length === 0) {
+    return (
+      <div className="text-center py-16">
+        <svg xmlns="http://www.w3.org/2000/svg" className="w-14 h-14 text-outline-variant mx-auto mb-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
+          <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/>
+        </svg>
+        <p className="text-on-surface-variant font-medium mb-1">Todavía no realizaste ningún pedido</p>
+        <p className="text-on-surface-variant/60 text-sm mb-6">Cuando completes una compra, aparecerá aquí con su estado.</p>
+        <Link
+          to="/"
+          className="inline-flex items-center gap-2 bg-primary text-on-primary px-6 py-3 rounded-full font-bold text-xs uppercase tracking-widest hover:shadow-lg hover:shadow-primary/20 transition-all"
+        >
+          Explorar el catálogo
+        </Link>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {orders.map((order) => (
+        <div key={order.id} className="border border-outline-variant/20 rounded-xl overflow-hidden">
+          {/* Order header row */}
+          <button
+            onClick={() => setExpandedId(expandedId === order.id ? null : order.id)}
+            className="w-full flex flex-wrap items-center justify-between gap-3 px-6 py-4 bg-surface hover:bg-surface-low transition-colors text-left"
+          >
+            <div className="flex items-center gap-4">
+              <span className="font-mono text-xs text-on-surface-variant">#{String(order.id).padStart(5, '0')}</span>
+              <span className="text-xs text-on-surface-variant">{new Date(order.createdAt).toLocaleDateString('es-AR')}</span>
+            </div>
+            <div className="flex items-center gap-4">
+              <span className="text-sm font-headline font-bold text-primary">{formatPeso(order.total)}</span>
+              <OrderStatusBadge status={order.status} />
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className={`w-4 h-4 text-on-surface-variant transition-transform ${expandedId === order.id ? 'rotate-180' : ''}`}
+                viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+              >
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </div>
+          </button>
+
+          {/* Expanded details */}
+          {expandedId === order.id && (
+            <div className="border-t border-outline-variant/20 px-6 py-4 bg-surface-low">
+              <div className="text-xs text-on-surface-variant mb-3">
+                <span className="uppercase tracking-widest font-bold text-outline">Entrega:</span>{' '}
+                <span className="capitalize">{order.tipoEntrega}</span>
+                {order.direccionEnvio && (
+                  <> — {order.direccionEnvio}</>
+                )}
+              </div>
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="text-left text-outline uppercase tracking-widest text-[10px]">
+                    <th className="pb-1.5">Título</th>
+                    <th className="pb-1.5">Edición</th>
+                    <th className="pb-1.5 text-right">Precio</th>
+                    <th className="pb-1.5 text-right">Cant.</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {order.OrderItems?.map((item, idx) => (
+                    <tr key={idx} className="border-t border-outline-variant/10">
+                      <td className="py-1.5 text-on-surface font-medium">{item.titulo}</td>
+                      <td className="py-1.5 capitalize text-on-surface-variant">{item.edicion}</td>
+                      <td className="py-1.5 text-right text-on-surface">{formatPeso(item.precio)}</td>
+                      <td className="py-1.5 text-right text-on-surface">{item.qty}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
 
 function ProfileSection({ user, onSave }) {
   const [form, setForm] = useState({
@@ -308,19 +440,7 @@ export default function AccountPage() {
               {tab === 'Mis pedidos' && (
                 <>
                   <h2 className="text-xl font-headline text-on-surface mb-6">Historial de pedidos</h2>
-                  <div className="text-center py-16">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="w-14 h-14 text-outline-variant mx-auto mb-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
-                      <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/>
-                    </svg>
-                    <p className="text-on-surface-variant font-medium mb-1">Todavía no realizaste ningún pedido</p>
-                    <p className="text-on-surface-variant/60 text-sm mb-6">Cuando completes una compra, aparecerá aquí con su estado.</p>
-                    <Link
-                      to="/"
-                      className="inline-flex items-center gap-2 bg-primary text-on-primary px-6 py-3 rounded-full font-bold text-xs uppercase tracking-widest hover:shadow-lg hover:shadow-primary/20 transition-all"
-                    >
-                      Explorar el catálogo
-                    </Link>
-                  </div>
+                  <OrdersSection />
                 </>
               )}
 

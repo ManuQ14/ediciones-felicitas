@@ -9,10 +9,16 @@ require('dotenv').config();
 require('./models/Book');
 require('./models/User');
 
+const Order = require('./models/Order');
+const OrderItem = require('./models/OrderItem');
+Order.hasMany(OrderItem, { foreignKey: 'orderId' });
+OrderItem.belongsTo(Order, { foreignKey: 'orderId' });
+
 const bookRoutes = require('./routes/bookRoutes');
 const authRoutes = require('./routes/authRoutes');
 const userAuthRoutes = require('./routes/userAuthRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
+const orderRoutes = require('./routes/orderRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -74,6 +80,7 @@ app.use('/api/books', bookRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userAuthRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/orders', orderRoutes);
 
 app.get('/', (req, res) => res.send('Ediciones Felicitas API is running'));
 
@@ -89,6 +96,8 @@ const startServer = async () => {
       if (dialect === 'sqlite') {
         await sequelize.query('DROP TABLE IF EXISTS `Users_backup`');
         await sequelize.query('DROP TABLE IF EXISTS `Books_backup`');
+        await sequelize.query('DROP TABLE IF EXISTS `Orders_backup`');
+        await sequelize.query('DROP TABLE IF EXISTS `OrderItems_backup`');
       }
     }
 
