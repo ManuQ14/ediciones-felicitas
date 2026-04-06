@@ -28,7 +28,7 @@ export function CartProvider({ children }) {
           i.bookId === book.id ? { ...i, qty: i.qty + qty } : i
         );
       }
-      return [...prev, { bookId: book.id, titulo: book.titulo, autor: book.autor, precio: Number(book.precio), imagen: book.imagen, qty }];
+      return [...prev, { bookId: book.id, slug: book.slug, titulo: book.titulo, autor: book.autor, precio: Number(book.precio), imagen: book.imagen, qty }];
     });
   };
 

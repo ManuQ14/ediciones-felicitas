@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
+import { makeSanitizedHandler } from '../utils/sanitize';
 
 const inputClass = 'w-full border border-outline-variant rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors';
 const labelClass = 'block text-xs font-medium text-on-surface-variant mb-1 uppercase tracking-wider';
 
 function LoginForm({ onSwitch }) {
   const [form, setForm] = useState({ email: '', password: '' });
+  const handleChange = makeSanitizedHandler(setForm);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { login } = useUser();
@@ -33,7 +35,8 @@ function LoginForm({ onSwitch }) {
         <input
           type="email"
           value={form.email}
-          onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+          name="email"
+          onChange={handleChange}
           className={inputClass}
           placeholder="tu@email.com"
           maxLength={100}
@@ -44,8 +47,9 @@ function LoginForm({ onSwitch }) {
         <label className={labelClass}>Contraseña</label>
         <input
           type="password"
+          name="password"
           value={form.password}
-          onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
+          onChange={handleChange}
           className={inputClass}
           placeholder="••••••••"
           maxLength={100}
@@ -75,6 +79,7 @@ function LoginForm({ onSwitch }) {
 
 function RegisterForm({ onSwitch }) {
   const [form, setForm] = useState({ nombre: '', email: '', password: '' });
+  const handleChange = makeSanitizedHandler(setForm);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { register } = useUser();
@@ -101,7 +106,8 @@ function RegisterForm({ onSwitch }) {
         <input
           type="text"
           value={form.nombre}
-          onChange={(e) => setForm((f) => ({ ...f, nombre: e.target.value }))}
+          name="nombre"
+          onChange={handleChange}
           className={inputClass}
           placeholder="Tu nombre"
           maxLength={80}
@@ -112,8 +118,9 @@ function RegisterForm({ onSwitch }) {
         <label className={labelClass}>Email</label>
         <input
           type="email"
+          name="email"
           value={form.email}
-          onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+          onChange={handleChange}
           className={inputClass}
           placeholder="tu@email.com"
           maxLength={100}
@@ -124,8 +131,9 @@ function RegisterForm({ onSwitch }) {
         <label className={labelClass}>Contraseña</label>
         <input
           type="password"
+          name="password"
           value={form.password}
-          onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
+          onChange={handleChange}
           className={inputClass}
           placeholder="Mínimo 6 caracteres"
           maxLength={100}

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../../services/api';
+import { makeSanitizedHandler } from '../../utils/sanitize';
 
 const EMPTY = { titulo: '', isbn: '', precio: '', autor: '', categoria: '', imagen: '', archivoDigital: '', tieneDigital: false };
 
@@ -73,11 +74,8 @@ export default function BookForm({ book, onSubmit, onCancel, loading }) {
     setError('');
   }, [book]);
 
-  const handleChange = (e) => {
-    const { name, type, value, checked } = e.target;
-    setForm((f) => ({ ...f, [name]: type === 'checkbox' ? checked : value }));
-    setError('');
-  };
+  const handleChange = makeSanitizedHandler(setForm);
+  const clearError = () => setError('');
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -123,7 +121,7 @@ export default function BookForm({ book, onSubmit, onCancel, loading }) {
           <input
             name="titulo"
             value={form.titulo}
-            onChange={handleChange}
+            onChange={(e) => { handleChange(e); clearError(); }}
             maxLength={150}
             className={`${inputClass} font-headline text-xl text-primary`}
             placeholder="Ej. Macacha Güemes"

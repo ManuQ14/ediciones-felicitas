@@ -10,6 +10,7 @@ import AuthPage from './pages/AuthPage';
 import AdminBooksPage from './pages/AdminBooksPage';
 import AccountPage from './pages/AccountPage';
 import Spinner from './components/ui/Spinner';
+import NotFoundPage from './pages/NotFoundPage';
 
 // Admin: muestra el login si no está autenticado, el panel si sí
 function AdminRoute({ children }) {
@@ -47,7 +48,7 @@ function AppRoutes() {
       <Route path="/admin" element={<AdminRoute><AdminBooksPage /></AdminRoute>} />
       <Route path="/admin/nuevo" element={<AdminRoute><AdminBooksPage openForm /></AdminRoute>} />
 
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
 }

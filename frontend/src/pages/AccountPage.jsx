@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Navbar from '../components/layout/Navbar';
 import { useUser } from '../context/UserContext';
+import { makeSanitizedHandler, sanitize } from '../utils/sanitize';
 
 const inputClass = 'w-full bg-surface border border-outline-variant rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors';
 const labelClass = 'block text-[0.625rem] font-bold uppercase tracking-widest text-outline mb-2';
@@ -12,6 +13,7 @@ function ProfileSection({ user, onSave }) {
     email: user?.email || '',
     telefono: user?.telefono || '',
   });
+  const handleChange = makeSanitizedHandler(setForm);
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
@@ -38,9 +40,11 @@ function ProfileSection({ user, onSave }) {
         <div>
           <label className={labelClass}>Nombre</label>
           <input
+            name="nombre"
             value={form.nombre}
-            onChange={(e) => setForm((f) => ({ ...f, nombre: e.target.value }))}
+            onChange={handleChange}
             className={inputClass}
+            maxLength={80}
             required
           />
         </div>
@@ -48,9 +52,11 @@ function ProfileSection({ user, onSave }) {
           <label className={labelClass}>Teléfono</label>
           <input
             type="tel"
+            name="telefono"
             value={form.telefono}
-            onChange={(e) => setForm((f) => ({ ...f, telefono: e.target.value }))}
+            onChange={handleChange}
             className={inputClass}
+            maxLength={20}
             placeholder="+54 11 ..."
           />
         </div>
@@ -59,9 +65,11 @@ function ProfileSection({ user, onSave }) {
         <label className={labelClass}>Email</label>
         <input
           type="email"
+          name="email"
           value={form.email}
-          onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+          onChange={handleChange}
           className={inputClass}
+          maxLength={100}
           required
         />
       </div>
@@ -84,6 +92,7 @@ function ProfileSection({ user, onSave }) {
 
 function AddressSection({ user, onSave }) {
   const [form, setForm] = useState({ direccion: user?.direccion || '' });
+  const handleChange = (e) => setForm({ direccion: sanitize(e.target.value) });
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
@@ -110,8 +119,9 @@ function AddressSection({ user, onSave }) {
         <label className={labelClass}>Dirección de envío</label>
         <textarea
           value={form.direccion}
-          onChange={(e) => setForm({ direccion: e.target.value })}
+          onChange={handleChange}
           rows={3}
+          maxLength={200}
           className={`${inputClass} resize-none`}
           placeholder="Calle, número, piso/depto — Ciudad, Provincia"
         />

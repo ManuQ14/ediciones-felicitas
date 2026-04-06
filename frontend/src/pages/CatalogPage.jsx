@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '../components/layout/Navbar';
 import Spinner from '../components/ui/Spinner';
+import ErrorPage from './ErrorPage';
 import api from '../services/api';
 
 const formatPeso = (n) =>
@@ -36,14 +37,22 @@ function BookCard({ book }) {
 export default function CatalogPage() {
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [search, setSearch] = useState('');
   const [categoria, setCategoria] = useState('');
 
-  useEffect(() => {
+  const fetchBooks = useCallback(() => {
+    setLoading(true);
+    setError(false);
     api.get('/books')
       .then(({ data }) => setBooks(data))
+      .catch(() => setError(true))
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => { fetchBooks(); }, [fetchBooks]);
+
+  if (error) return <ErrorPage onRetry={fetchBooks} />;
 
   const categorias = [...new Set(books.map((b) => b.categoria).filter(Boolean))];
 
