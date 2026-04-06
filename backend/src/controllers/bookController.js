@@ -79,11 +79,11 @@ const updateBook = async (req, res) => {
   try {
     const book = await Book.findByPk(req.params.id);
     if (!book) return res.status(404).json({ error: 'Libro no encontrado' });
-    const { titulo, isbn, precio, autor, categoria, imagen, activo, tieneDigital, archivoDigital, stock } = req.body;
+    const { titulo, isbn, precio, autor, categoria, imagen, activo, tieneDigital, archivoDigital, stock, paginas } = req.body;
     const newSlug = titulo && titulo !== book.titulo
       ? await generateUniqueSlug(titulo, book.id)
       : book.slug;
-    await book.update({ titulo, isbn, precio, autor, categoria, imagen, activo, tieneDigital, archivoDigital, slug: newSlug, ...(stock !== undefined && { stock }) });
+    await book.update({ titulo, isbn, precio, autor, categoria, imagen, activo, tieneDigital, archivoDigital, slug: newSlug, ...(stock !== undefined && { stock }), ...(paginas !== undefined && { paginas }) });
     res.json(book);
   } catch (error) {
     if (error.name === 'SequelizeUniqueConstraintError') {
