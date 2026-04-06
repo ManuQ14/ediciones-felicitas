@@ -30,7 +30,9 @@ const Book = sequelize.define('Book', {
   slug: {
     type: DataTypes.STRING,
     allowNull: true,
-    unique: true,
+    // unique no se declara acá porque SQLite no soporta ALTER TABLE ADD UNIQUE.
+    // La unicidad se garantiza en generateUniqueSlug del controller.
+    // En PostgreSQL (prod) agregar el índice manualmente si hace falta.
   },
   tieneDigital: {
     type: DataTypes.BOOLEAN,
