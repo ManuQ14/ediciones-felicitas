@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import api from '../../services/api';
 
 const navItems = [
   {
@@ -27,10 +29,33 @@ const navItems = [
 export default function AdminSidebar() {
   const { logout } = useAuth();
   const navigate = useNavigate();
+  const [showPwModal, setShowPwModal] = useState(false);
+  const [pwForm, setPwForm] = useState({ current: '', next: '', confirm: '' });
+  const [pwError, setPwError] = useState('');
+  const [pwSuccess, setPwSuccess] = useState(false);
+  const [pwLoading, setPwLoading] = useState(false);
 
   const handleLogout = () => {
     logout();
     navigate('/');
+  };
+
+  const handlePwSubmit = async (e) => {
+    e.preventDefault();
+    setPwError('');
+    if (pwForm.next !== pwForm.confirm) { setPwError('Las contraseñas no coinciden'); return; }
+    if (pwForm.next.length < 6) { setPwError('Mínimo 6 caracteres'); return; }
+    setPwLoading(true);
+    try {
+      await api.post('/auth/change-password', { currentPassword: pwForm.current, newPassword: pwForm.next });
+      setPwSuccess(true);
+      setPwForm({ current: '', next: '', confirm: '' });
+      setTimeout(() => { setPwSuccess(false); setShowPwModal(false); }, 2000);
+    } catch (err) {
+      setPwError(err.response?.data?.error || 'Error al cambiar la contraseña');
+    } finally {
+      setPwLoading(false);
+    }
   };
 
   const activeClass =
@@ -61,6 +86,29 @@ export default function AdminSidebar() {
         ))}
       </nav>
 
+      {/* Password change modal */}
+      {showPwModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+          <div className="bg-surface rounded-2xl shadow-2xl w-full max-w-xs p-6">
+            <h3 className="font-headline font-bold text-on-surface mb-4">Cambiar contraseña</h3>
+            {pwSuccess ? (
+              <p className="text-green-600 text-sm font-medium text-center py-4">¡Contraseña actualizada!</p>
+            ) : (
+              <form onSubmit={handlePwSubmit} className="space-y-3">
+                <input type="password" placeholder="Contraseña actual" value={pwForm.current} onChange={(e) => setPwForm(f => ({...f, current: e.target.value}))} className="w-full border border-outline-variant rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" required />
+                <input type="password" placeholder="Nueva contraseña" value={pwForm.next} onChange={(e) => setPwForm(f => ({...f, next: e.target.value}))} className="w-full border border-outline-variant rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" minLength={6} required />
+                <input type="password" placeholder="Confirmar nueva contraseña" value={pwForm.confirm} onChange={(e) => setPwForm(f => ({...f, confirm: e.target.value}))} className="w-full border border-outline-variant rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" required />
+                {pwError && <p className="text-error text-xs">{pwError}</p>}
+                <div className="flex gap-2 pt-1">
+                  <button type="submit" disabled={pwLoading} className="flex-1 bg-primary text-on-primary py-2 rounded-full text-xs font-bold disabled:opacity-50">{pwLoading ? 'Guardando…' : 'Guardar'}</button>
+                  <button type="button" onClick={() => { setShowPwModal(false); setPwError(''); setPwForm({ current: '', next: '', confirm: '' }); }} className="flex-1 border border-outline-variant text-on-surface-variant py-2 rounded-full text-xs font-bold">Cancelar</button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Bottom */}
       <div className="px-4 mt-auto space-y-2">
         <NavLink
@@ -72,6 +120,15 @@ export default function AdminSidebar() {
           </svg>
           <span className="text-xs uppercase tracking-widest font-medium">Ver Catálogo</span>
         </NavLink>
+        <button
+          onClick={() => setShowPwModal(true)}
+          className="w-full flex items-center gap-3 text-on-surface-variant p-3 hover:bg-surface-high rounded-r-full hover:translate-x-1 transition-transform duration-200"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+          <span className="text-xs uppercase tracking-widest font-medium">Contraseña</span>
+        </button>
         <button
           onClick={handleLogout}
           className="w-full flex items-center gap-3 text-on-surface-variant p-3 hover:bg-surface-high rounded-r-full hover:translate-x-1 transition-transform duration-200"

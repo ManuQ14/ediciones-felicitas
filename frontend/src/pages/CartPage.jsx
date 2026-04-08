@@ -215,6 +215,7 @@ export default function CartPage() {
   const { user, isLoggedIn, updateProfile } = useUser();
   const navigate = useNavigate();
   const [showClearModal, setShowClearModal] = useState(false);
+  const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
@@ -225,7 +226,7 @@ export default function CartPage() {
   const isAllDigital = items.length > 0 && items.every((i) => i.edicion === 'digital');
 
   const handleCheckoutClick = () => {
-    if (!isLoggedIn) { navigate('/login'); return; }
+    if (!isLoggedIn) { setShowRegisterModal(true); return; }
     // Digital: no hace falta dirección física
     if (isAllDigital) { setShowAddressModal(true); return; }
     // Logueado y con dirección: ir al modal de confirmación directamente
@@ -274,6 +275,40 @@ export default function CartPage() {
   return (
     <div className="min-h-screen bg-surface">
       <Navbar />
+
+      {showRegisterModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+          <div className="bg-surface rounded-2xl shadow-2xl max-w-sm w-full p-8 text-center">
+            <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-5">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-7 h-7 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </div>
+            <h3 className="font-headline text-xl font-bold text-on-surface mb-2">Necesitás una cuenta</h3>
+            <p className="text-sm text-on-surface-variant mb-6">
+              Para comprar necesitás estar registrado. Así podés ver el estado de tu envío, descargar tus libros digitales y gestionar tus pedidos.
+            </p>
+            <div className="space-y-3">
+              <button
+                onClick={() => { setShowRegisterModal(false); navigate('/login', { state: { tab: 'register' } }); }}
+                className="w-full bg-primary text-on-primary py-3 rounded-full font-bold hover:shadow-lg hover:shadow-primary/20 transition-all"
+              >
+                Crear cuenta
+              </button>
+              <button
+                onClick={() => { setShowRegisterModal(false); navigate('/login'); }}
+                className="w-full border border-outline-variant text-on-surface py-3 rounded-full font-medium hover:bg-surface-low transition-colors text-sm"
+              >
+                Ya tengo cuenta — Iniciar sesión
+              </button>
+              <button
+                onClick={() => setShowRegisterModal(false)}
+                className="w-full text-on-surface-variant text-xs hover:text-on-surface transition-colors py-1"
+              >
+                Volver al carrito
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showAddressModal && (
         <AddressModal

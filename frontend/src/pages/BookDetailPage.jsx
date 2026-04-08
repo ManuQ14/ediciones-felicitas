@@ -134,7 +134,7 @@ export default function BookDetailPage() {
                   <span className="inline-block text-xs bg-error/10 text-error px-3 py-1 rounded-full font-semibold">Sin stock</span>
                 )}
                 {book.stock > 0 && book.stock <= 5 && (
-                  <span className="inline-block text-xs bg-amber-100 text-amber-700 px-3 py-1 rounded-full font-semibold">Últimas {book.stock} unidades disponibles</span>
+                  <span className="inline-block text-xs bg-amber-100 text-amber-700 px-3 py-1 rounded-full font-semibold">{book.stock === 1 ? 'Última unidad disponible' : `Últimas ${book.stock} unidades disponibles`}</span>
                 )}
                 {book.stock > 5 && (
                   <span className="inline-block text-xs bg-tertiary/10 text-tertiary px-3 py-1 rounded-full font-semibold">En stock</span>

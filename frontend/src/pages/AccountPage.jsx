@@ -123,7 +123,7 @@ function OrdersSection({ userToken }) {
   return (
     <div className="space-y-4">
       {orders.map((order) => (
-        <div key={order.id} className="border border-outline-variant/20 rounded-xl overflow-hidden">
+        <div key={order.id} className="border-2 border-outline-variant/40 rounded-xl overflow-hidden shadow-sm">
           {/* Order header row */}
           <button
             onClick={() => setExpandedId(expandedId === order.id ? null : order.id)}

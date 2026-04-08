@@ -1,12 +1,34 @@
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
+const fs = require('fs');
+const path = require('path');
 
-const login = (req, res) => {
+const OVERRIDE_FILE = path.join(__dirname, '../../admin_override.json');
+
+const getAdminPassword = () => {
+  try {
+    if (fs.existsSync(OVERRIDE_FILE)) {
+      return JSON.parse(fs.readFileSync(OVERRIDE_FILE, 'utf8')).passwordHash || null;
+    }
+  } catch (_) {}
+  return null;
+};
+
+const login = async (req, res) => {
   const { usuario, password } = req.body;
-
   const validUser = process.env.ADMIN_USER || 'admin';
   const validPass = process.env.ADMIN_PASSWORD || 'admin123';
 
-  if (usuario !== validUser || password !== validPass) {
+  if (usuario !== validUser) {
+    return res.status(401).json({ error: 'Credenciales incorrectas' });
+  }
+
+  const overrideHash = getAdminPassword();
+  const passwordOk = overrideHash
+    ? await bcrypt.compare(password, overrideHash)
+    : password === validPass;
+
+  if (!passwordOk) {
     return res.status(401).json({ error: 'Credenciales incorrectas' });
   }
 
@@ -15,8 +37,31 @@ const login = (req, res) => {
     process.env.JWT_SECRET || 'ef-secret-dev',
     { expiresIn: '8h' }
   );
-
   res.json({ token, usuario });
 };
 
-module.exports = { login };
+const changeAdminPassword = async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({ error: 'Faltan datos' });
+  }
+  if (newPassword.length < 6) {
+    return res.status(400).json({ error: 'La nueva contraseña debe tener al menos 6 caracteres' });
+  }
+
+  const validPass = process.env.ADMIN_PASSWORD || 'admin123';
+  const overrideHash = getAdminPassword();
+  const currentOk = overrideHash
+    ? await bcrypt.compare(currentPassword, overrideHash)
+    : currentPassword === validPass;
+
+  if (!currentOk) {
+    return res.status(401).json({ error: 'La contraseña actual es incorrecta' });
+  }
+
+  const newHash = await bcrypt.hash(newPassword, 10);
+  fs.writeFileSync(OVERRIDE_FILE, JSON.stringify({ passwordHash: newHash }));
+  res.json({ ok: true });
+};
+
+module.exports = { login, changeAdminPassword };

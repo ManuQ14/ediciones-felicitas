@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
 import { makeSanitizedHandler } from '../utils/sanitize';
 
@@ -78,7 +78,7 @@ function LoginForm({ onSwitch }) {
 }
 
 function RegisterForm({ onSwitch }) {
-  const [form, setForm] = useState({ nombre: '', email: '', password: '' });
+  const [form, setForm] = useState({ nombre: '', email: '', password: '', direccion: '' });
   const handleChange = makeSanitizedHandler(setForm);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -90,7 +90,7 @@ function RegisterForm({ onSwitch }) {
     setError('');
     setLoading(true);
     try {
-      await register(form.nombre, form.email, form.password);
+      await register(form.nombre, form.email, form.password, form.direccion);
       navigate('/');
     } catch (err) {
       setError(err.response?.data?.error || 'Error al registrarse');
@@ -109,7 +109,7 @@ function RegisterForm({ onSwitch }) {
           name="nombre"
           onChange={handleChange}
           className={inputClass}
-          placeholder="Tu nombre"
+          placeholder="Tu nombre completo"
           maxLength={80}
           required
         />
@@ -124,6 +124,19 @@ function RegisterForm({ onSwitch }) {
           className={inputClass}
           placeholder="tu@email.com"
           maxLength={100}
+          required
+        />
+      </div>
+      <div>
+        <label className={labelClass}>Dirección de envío</label>
+        <input
+          type="text"
+          name="direccion"
+          value={form.direccion}
+          onChange={handleChange}
+          className={inputClass}
+          placeholder="Calle, número, ciudad"
+          maxLength={200}
           required
         />
       </div>
@@ -163,7 +176,8 @@ function RegisterForm({ onSwitch }) {
 }
 
 export default function AuthPage() {
-  const [tab, setTab] = useState('login');
+  const location = useLocation();
+  const [tab, setTab] = useState(location.state?.tab || 'login');
 
   return (
     <div className="min-h-screen bg-surface-low flex items-center justify-center px-4">

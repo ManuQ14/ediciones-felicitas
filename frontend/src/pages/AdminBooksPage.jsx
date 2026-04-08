@@ -99,9 +99,7 @@ export default function AdminBooksPage({ openForm: openFormProp = false }) {
 
   const activeBooks = books.filter((b) => b.activo);
   const sinStock = activeBooks.filter((b) => Number(b.stock ?? 0) === 0).length;
-  const avgPrice = activeBooks.length
-    ? activeBooks.reduce((sum, b) => sum + Number(b.precio), 0) / activeBooks.length
-    : 0;
+  const totalStock = books.reduce((sum, b) => sum + Number(b.stock ?? 0), 0);
 
   const filtered = books.filter(
     (b) =>
@@ -146,8 +144,8 @@ export default function AdminBooksPage({ openForm: openFormProp = false }) {
         </div>
         <div className="w-px bg-outline-variant/30 self-stretch hidden sm:block" />
         <div className="flex flex-col gap-1">
-          <span className="text-[10px] uppercase tracking-widest text-on-surface-variant">Precio promedio</span>
-          <span className="text-3xl font-headline italic text-on-surface">{formatPeso(avgPrice)}</span>
+          <span className="text-[10px] uppercase tracking-widest text-on-surface-variant">Unidades en stock</span>
+          <span className={`text-3xl font-headline italic ${totalStock < 10 ? 'text-error' : 'text-on-surface'}`}>{totalStock}</span>
         </div>
       </div>
 

@@ -175,33 +175,48 @@ function OrderRow({ order, onStatusChange, onCancellationDecision }) {
                   </div>
                 )}
 
-                {/* Status actions for physical/mixed orders */}
-                {['fisico', 'mixto'].includes(order.tipoEntrega) && (
-                  <div className="mt-4 pt-3 border-t border-outline-variant/10 flex flex-wrap gap-2 items-center">
-                    <span className="text-[10px] uppercase tracking-widest text-outline font-bold mr-2">Actualizar estado:</span>
-                    {order.status === 'approved' && (
-                      <button
-                        onClick={(e) => { e.stopPropagation(); onStatusChange(order.id, 'shipped'); }}
-                        className="px-3 py-1.5 text-xs font-bold bg-blue-100 text-blue-700 rounded-full hover:bg-blue-200 transition-colors"
-                      >
-                        Marcar como enviado
-                      </button>
-                    )}
-                    {order.status === 'shipped' && (
-                      <button
-                        onClick={(e) => { e.stopPropagation(); onStatusChange(order.id, 'delivered'); }}
-                        className="px-3 py-1.5 text-xs font-bold bg-green-100 text-green-700 rounded-full hover:bg-green-200 transition-colors"
-                      >
-                        Marcar como entregado
-                      </button>
-                    )}
-                    {order.status === 'delivered' && (
-                      <span className={`text-xs px-3 py-1 rounded-full ${order.clientConfirmedDelivery ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
-                        {order.clientConfirmedDelivery ? '✓ Cliente confirmó recepción' : 'Esperando confirmación del cliente'}
-                      </span>
-                    )}
-                  </div>
-                )}
+                {/* Status actions — all order types */}
+                <div className="mt-4 pt-3 border-t border-outline-variant/10 flex flex-wrap gap-2 items-center">
+                  <span className="text-[10px] uppercase tracking-widest text-outline font-bold mr-2">Actualizar estado:</span>
+                  {order.status === 'approved' && ['fisico', 'mixto'].includes(order.tipoEntrega) && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); onStatusChange(order.id, 'shipped'); }}
+                      className="px-3 py-1.5 text-xs font-bold bg-blue-100 text-blue-700 rounded-full hover:bg-blue-200 transition-colors"
+                    >
+                      Marcar como enviado
+                    </button>
+                  )}
+                  {order.status === 'shipped' && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); onStatusChange(order.id, 'delivered'); }}
+                      className="px-3 py-1.5 text-xs font-bold bg-green-100 text-green-700 rounded-full hover:bg-green-200 transition-colors"
+                    >
+                      Marcar como entregado
+                    </button>
+                  )}
+                  {order.status === 'delivered' && (
+                    <span className={`text-xs px-3 py-1 rounded-full ${order.clientConfirmedDelivery ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
+                      {order.clientConfirmedDelivery ? '✓ Cliente confirmó recepción' : 'Esperando confirmación del cliente'}
+                    </span>
+                  )}
+                  {/* Manual override para cualquier tipo */}
+                  {!['shipped','delivered','cancelled'].includes(order.status) && (
+                    <select
+                      defaultValue=""
+                      onClick={(e) => e.stopPropagation()}
+                      onChange={(e) => { if (e.target.value) { onStatusChange(order.id, e.target.value); e.target.value = ''; } }}
+                      className="text-xs border border-outline-variant rounded-full px-3 py-1.5 bg-surface text-on-surface-variant"
+                    >
+                      <option value="" disabled>Estado manual…</option>
+                      <option value="pending">Pendiente</option>
+                      <option value="approved">Aprobado</option>
+                      <option value="in_process">En proceso</option>
+                      <option value="shipped">Enviado</option>
+                      <option value="delivered">Entregado</option>
+                      <option value="rejected">Rechazado</option>
+                    </select>
+                  )}
+                </div>
 
                 {/* Admin cancel (for approved/pending orders) */}
                 {['approved', 'pending', 'in_process'].includes(order.status) && (

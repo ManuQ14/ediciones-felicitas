@@ -41,7 +41,7 @@ function BookCard({ book }) {
           <span className="inline-block text-xs bg-error/10 text-error px-2 py-0.5 rounded-full font-semibold">Sin stock</span>
         )}
         {isLowStock && (
-          <span className="inline-block text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-semibold">Últimas {book.stock}</span>
+          <span className="inline-block text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-semibold">{book.stock === 1 ? 'Última unidad' : `Últimas ${book.stock}`}</span>
         )}
       </div>
     </>
