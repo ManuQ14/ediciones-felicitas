@@ -5,15 +5,11 @@ import './index.css'
 import App from './App.jsx'
 
 // Register service worker for PWA functionality
-if ('serviceWorker' in navigator) {
+if ('serviceWorker' in navigator && import.meta.env.PROD) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
-      .then((registration) => {
-        console.log('SW registered:', registration);
-      })
-      .catch((error) => {
-        console.log('SW registration failed:', error);
-      });
+    navigator.serviceWorker.register('/sw.js').catch(() => {
+      // Silently fail in production
+    });
   });
 }
 

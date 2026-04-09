@@ -37,15 +37,24 @@ export default function AdminSidebar({ open, onClose }) {
   const [pwSuccess, setPwSuccess] = useState(false);
   const [pwLoading, setPwLoading] = useState(false);
 
-  // Lock body scroll when sidebar is open on mobile
+  // Lock body scroll when sidebar is open on mobile (only <lg breakpoint)
   useEffect(() => {
-    if (open) {
+    const isLargeScreen = window.matchMedia('(min-width: 1024px)').matches;
+
+    if (open && !isLargeScreen) {
       document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.width = '100%';
     } else {
       document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
     }
+
     return () => {
       document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
     };
   }, [open]);
 
