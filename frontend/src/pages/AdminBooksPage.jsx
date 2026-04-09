@@ -185,10 +185,10 @@ export default function AdminBooksPage({ openForm: openFormProp = false }) {
       {/* Form Modal */}
       {showForm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl mx-4 max-h-[92vh] overflow-y-auto relative">
-            <div className="p-5 sm:p-8 lg:p-10">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl mx-2 sm:mx-4 max-h-[94vh] overflow-y-auto relative">
+            <div className="p-4 sm:p-7 lg:p-10">
               {/* Modal header */}
-              <div className="flex justify-between items-start mb-8">
+              <div className="flex justify-between items-start mb-5 sm:mb-8">
                 <div>
                   <h3 className="text-2xl sm:text-3xl lg:text-4xl font-headline font-bold tracking-tight text-primary">
                     {editingBook ? editingBook.titulo : 'Añadir Nuevo Libro'}

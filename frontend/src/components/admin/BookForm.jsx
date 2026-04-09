@@ -88,7 +88,7 @@ export default function BookForm({ book, onSubmit, onCancel, loading, onFormChan
   };
 
   return (
-    <form onSubmit={handleSubmit} className="grid grid-cols-12 gap-10">
+    <form onSubmit={handleSubmit} className="grid grid-cols-12 gap-6 lg:gap-10">
       {/* Left: Cover preview */}
       <div className="col-span-12 lg:col-span-4 space-y-6">
         <div className="bg-surface-low p-6 rounded-lg">
@@ -117,7 +117,7 @@ export default function BookForm({ book, onSubmit, onCancel, loading, onFormChan
       </div>
 
       {/* Right: Form fields */}
-      <div className="col-span-12 lg:col-span-8 space-y-8 bg-surface-low p-8 rounded-xl">
+      <div className="col-span-12 lg:col-span-8 space-y-6 bg-surface-low p-4 sm:p-6 lg:p-8 rounded-xl">
         {/* Título */}
         <div>
           <label className={labelClass}>Título de la Obra *</label>
@@ -131,7 +131,7 @@ export default function BookForm({ book, onSubmit, onCancel, loading, onFormChan
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
           <div>
             <label className={labelClass}>Autor</label>
             <input name="autor" value={form.autor} onChange={handleChange} maxLength={100} className={inputClass} placeholder="Nombre del autor" />
@@ -145,7 +145,7 @@ export default function BookForm({ book, onSubmit, onCancel, loading, onFormChan
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
           <div>
             <label className={labelClass}>Precio (ARS) *</label>
             <div className="relative">
@@ -241,18 +241,18 @@ export default function BookForm({ book, onSubmit, onCancel, loading, onFormChan
         {error && <p className="text-error text-sm">{error}</p>}
 
         {/* Actions */}
-        <div className="flex items-center justify-between pt-6 border-t border-outline-variant/20">
+        <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3 pt-6 border-t border-outline-variant/20">
           <button
             type="button"
             onClick={onCancel}
-            className="px-8 py-3 text-sm font-bold uppercase tracking-widest text-on-surface-variant hover:text-on-surface transition-colors"
+            className="w-full sm:w-auto px-8 py-3 text-sm font-bold uppercase tracking-widest text-on-surface-variant hover:text-on-surface transition-colors text-center"
           >
             Cancelar
           </button>
           <button
             type="submit"
             disabled={loading}
-            className="px-10 py-4 bg-primary text-on-primary rounded-full font-bold uppercase tracking-widest text-xs shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:scale-95 transition-all disabled:opacity-50 flex items-center gap-3"
+            className="w-full sm:w-auto px-10 py-4 bg-primary text-on-primary rounded-full font-bold uppercase tracking-widest text-xs shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-3"
           >
             {book ? 'Actualizar Cambios' : 'Guardar Libro'}
             <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
