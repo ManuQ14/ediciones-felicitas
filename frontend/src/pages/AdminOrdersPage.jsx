@@ -319,18 +319,16 @@ export default function AdminOrdersPage() {
         <p className="text-on-surface-variant mt-1 text-sm sm:text-base">Gestioná los pedidos de Ediciones Felicitas.</p>
       </header>
 
-      {/* Stats bar */}
-      <div className="flex flex-wrap gap-4 sm:gap-6 mb-6 lg:mb-10 p-4 sm:p-6 lg:p-8 bg-surface-low rounded-xl">
+      {/* Stats bar — grid 2 cols en mobile, fila en sm+ */}
+      <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-4 sm:gap-6 mb-6 lg:mb-10 p-4 sm:p-6 lg:p-8 bg-surface-low rounded-xl">
         <div className="flex flex-col gap-1">
           <span className="text-[10px] uppercase tracking-widest text-on-surface-variant">Total órdenes</span>
           <span className="text-3xl font-headline italic text-primary">{orders.length}</span>
         </div>
-        <div className="w-px bg-outline-variant/30 self-stretch hidden sm:block" />
         <div className="flex flex-col gap-1">
           <span className="text-[10px] uppercase tracking-widest text-on-surface-variant">Aprobados</span>
           <span className="text-3xl font-headline italic text-tertiary">{totalApproved}</span>
         </div>
-        <div className="w-px bg-outline-variant/30 self-stretch hidden sm:block" />
         <div className="flex flex-col gap-1">
           <span className="text-[10px] uppercase tracking-widest text-on-surface-variant">Pendientes</span>
           <span className={`text-3xl font-headline italic ${totalPending > 0 ? 'text-amber-600' : 'text-on-surface'}`}>
@@ -338,23 +336,20 @@ export default function AdminOrdersPage() {
           </span>
         </div>
         {totalCancelRequests > 0 && (
-          <>
-            <div className="w-px bg-outline-variant/30 self-stretch hidden sm:block" />
-            <div className="flex flex-col gap-1">
-              <span className="text-[10px] uppercase tracking-widest text-orange-600">Cancelaciones pendientes</span>
-              <span className="text-3xl font-headline italic text-orange-600">{totalCancelRequests}</span>
-            </div>
-          </>
+          <div className="flex flex-col gap-1">
+            <span className="text-[10px] uppercase tracking-widest text-orange-600">Cancelaciones</span>
+            <span className="text-3xl font-headline italic text-orange-600">{totalCancelRequests}</span>
+          </div>
         )}
       </div>
 
-      {/* Filter pills — scroll horizontal en mobile */}
-      <div className="flex gap-2 mb-6 overflow-x-auto pb-1 scrollbar-none">
+      {/* Filter pills — wrap en mobile */}
+      <div className="flex flex-wrap gap-2 mb-6">
         {FILTERS.map((f) => (
           <button
             key={f}
             onClick={() => setFilter(f)}
-            className={`px-5 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-all whitespace-nowrap flex-shrink-0 ${
+            className={`px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-all ${
               filter === f
                 ? 'bg-primary text-on-primary shadow-md'
                 : 'bg-surface-low text-on-surface-variant hover:bg-surface-high'

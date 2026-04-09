@@ -134,27 +134,24 @@ export default function AdminBooksPage({ openForm: openFormProp = false }) {
         </button>
       </header>
 
-      {/* Stats bar */}
-      <div className="flex flex-wrap gap-4 sm:gap-6 mb-6 lg:mb-10 p-4 sm:p-6 lg:p-8 bg-surface-low rounded-xl">
+      {/* Stats bar — grid 2 cols en mobile, fila en sm+ */}
+      <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-4 sm:gap-6 mb-6 lg:mb-10 p-4 sm:p-6 lg:p-8 bg-surface-low rounded-xl">
         <div className="flex flex-col gap-1">
           <span className="text-[10px] uppercase tracking-widest text-on-surface-variant">Total títulos</span>
           <span className="text-3xl font-headline italic text-primary">{books.length}</span>
         </div>
-        <div className="w-px bg-outline-variant/30 self-stretch hidden sm:block" />
         <div className="flex flex-col gap-1">
           <span className="text-[10px] uppercase tracking-widest text-on-surface-variant">Activos</span>
           <span className="text-3xl font-headline italic text-on-surface">{activeBooks.length}</span>
         </div>
-        <div className="w-px bg-outline-variant/30 self-stretch hidden sm:block" />
         <div className="flex flex-col gap-1">
           <span className="text-[10px] uppercase tracking-widest text-on-surface-variant">Sin stock</span>
           <span className={`text-3xl font-headline italic ${sinStock > 0 ? 'text-error' : 'text-on-surface'}`}>
             {sinStock}
           </span>
         </div>
-        <div className="w-px bg-outline-variant/30 self-stretch hidden sm:block" />
         <div className="flex flex-col gap-1">
-          <span className="text-[10px] uppercase tracking-widest text-on-surface-variant">Unidades en stock</span>
+          <span className="text-[10px] uppercase tracking-widest text-on-surface-variant">En stock</span>
           <span className={`text-3xl font-headline italic ${totalStock < 10 ? 'text-error' : 'text-on-surface'}`}>{totalStock}</span>
         </div>
       </div>
