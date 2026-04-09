@@ -49,7 +49,7 @@ const changeAdminPassword = async (req, res) => {
     return res.status(400).json({ error: 'La nueva contraseña debe tener al menos 6 caracteres' });
   }
 
-  const validPass = process.env.ADMIN_PASSWORD || 'admin123';
+  const validPass = process.env.ADMIN_PASSWORD;
   const overrideHash = getAdminPassword();
   const currentOk = overrideHash
     ? await bcrypt.compare(currentPassword, overrideHash)
