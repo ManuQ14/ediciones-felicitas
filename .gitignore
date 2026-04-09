@@ -2,3 +2,6 @@ node_modules
 .env
 *.sqlite
 dist
+
+# Claude Code — worktrees y memoria local (nunca al repo)
+.claude/
