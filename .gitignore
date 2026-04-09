@@ -5,3 +5,14 @@ dist
 
 # Claude Code — worktrees y memoria local (nunca al repo)
 .claude/
+
+# Admin password override (generado en runtime, nunca commitear)
+backend/admin_override.json
+
+# Archivos subidos por usuarios
+backend/uploads/libros/
+backend/uploads/digital/
+
+# Logs
+*.log
+npm-debug.log*
