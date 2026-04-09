@@ -78,7 +78,7 @@ export default function AdminSidebar({ open, onClose }) {
           bg-surface flex flex-col py-8 pr-4
           border-r border-outline-variant/20
           transition-transform duration-300 ease-in-out
-          z-50
+          z-50 overflow-y-auto
           ${open ? 'translate-x-0' : '-translate-x-full'}
           lg:translate-x-0
         `}

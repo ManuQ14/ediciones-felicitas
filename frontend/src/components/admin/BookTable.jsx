@@ -29,7 +29,8 @@ export default function BookTable({ books, onEdit, onDelete, onToggleActive }) {
   }
 
   return (
-    <div className="bg-white overflow-hidden rounded-xl border border-outline-variant/20">
+    <div className="overflow-x-auto rounded-xl border border-outline-variant/20">
+    <div className="bg-white overflow-hidden rounded-xl min-w-[560px]">
       <table className="w-full text-left border-collapse">
         <thead>
           <tr className="bg-surface-low text-on-surface-variant border-b border-outline-variant/20">
@@ -143,6 +144,7 @@ export default function BookTable({ books, onEdit, onDelete, onToggleActive }) {
           ))}
         </tbody>
       </table>
+    </div>
     </div>
   );
 }

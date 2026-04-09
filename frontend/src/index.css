@@ -28,6 +28,7 @@ html {
 body {
   font-family: var(--font-body);
   background-color: var(--color-surface);
+  overflow-x: hidden; /* evita scroll horizontal por el sidebar off-screen en mobile */
   color: var(--color-on-surface);
 }
 
