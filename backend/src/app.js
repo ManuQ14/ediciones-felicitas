@@ -21,21 +21,15 @@ if (missingEnv.length > 0) {
 }
 
 if (process.env.NODE_ENV === 'production') {
-  const missingR2 = R2_ENV.filter((key) => !process.env[key]);
-  if (missingR2.length > 0) {
-    console.error(`ERROR: Variables R2 requeridas en producción: ${missingR2.join(', ')}`);
-    process.exit(1);
-  }
   if (!process.env.FRONTEND_URL) {
     console.error('ERROR: FRONTEND_URL es requerido en producción');
     process.exit(1);
   }
-} else {
-  // Development mode - check if R2 is configured
-  const hasR2 = R2_ENV.every((key) => process.env[key]);
-  if (!hasR2) {
-    console.log('⚠️  R2 no configurado - usando almacenamiento local (solo desarrollo)');
-  }
+}
+
+const hasR2 = R2_ENV.every((key) => process.env[key]);
+if (!hasR2) {
+  console.log('R2 no configurado - usando almacenamiento local (Volume)');
 }
 
 const sequelize = require('./config/database');
@@ -55,6 +49,7 @@ const uploadRoutes = require('./routes/uploadRoutes');
 const orderRoutes = require('./routes/orderRoutes');
 
 const app = express();
+app.set('trust proxy', 1);
 const PORT = process.env.PORT || 3001;
 
 // Security headers
