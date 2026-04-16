@@ -265,7 +265,7 @@ export default function CartPage() {
       const { data } = await api.post('/orders', payload);
       // Cart is cleared on PaymentSuccessPage after confirmed payment
       // In dev use sandboxInitPoint, in prod use initPoint
-      window.location.href = data.sandboxInitPoint || data.initPoint;
+      window.location.href = data.initPoint || data.sandboxInitPoint;
     } catch (err) {
       setCheckoutError(err.response?.data?.error || 'Error al procesar el pago. Intentá de nuevo.');
       setCheckoutLoading(false);
