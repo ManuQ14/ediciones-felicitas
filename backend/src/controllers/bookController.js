@@ -83,7 +83,9 @@ const updateBook = async (req, res) => {
     const newSlug = titulo && titulo !== book.titulo
       ? await generateUniqueSlug(titulo, book.id)
       : book.slug;
-    await book.update({ titulo, isbn, precio, autor, categoria, imagen, activo, tieneDigital, archivoDigital, slug: newSlug, ...(stock !== undefined && { stock }), ...(paginas !== undefined && { paginas }) });
+    const paginasVal = paginas === '' || paginas === undefined ? null : Number(paginas);
+    const stockVal = stock === '' || stock === undefined ? null : Number(stock);
+    await book.update({ titulo, isbn, precio, autor, categoria, imagen, activo, tieneDigital, archivoDigital, slug: newSlug, ...(stockVal !== null && { stock: stockVal }), paginas: paginasVal });
     res.json(book);
   } catch (error) {
     if (error.name === 'SequelizeUniqueConstraintError') {
