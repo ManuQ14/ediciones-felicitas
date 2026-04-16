@@ -128,8 +128,7 @@ const createOrder = async (req, res) => {
           failure: `${frontendUrl}/pago/fallido`,
           pending: `${frontendUrl}/pago/pendiente`,
         },
-        // auto_return solo funciona con URLs públicas (no localhost)
-        // En producción descomentar: auto_return: 'approved',
+        auto_return: 'approved',
         notification_url: `${backendUrl}/api/orders/webhook`,
         external_reference: `ORDER-${order.id}`,
         statement_descriptor: 'Ediciones Felicitas',
