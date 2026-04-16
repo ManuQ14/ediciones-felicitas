@@ -3,7 +3,9 @@ const bcrypt = require('bcryptjs');
 const fs = require('fs');
 const path = require('path');
 
-const OVERRIDE_FILE = path.join(__dirname, '../../admin_override.json');
+const OVERRIDE_FILE = process.env.NODE_ENV === 'production'
+  ? '/app/uploads/admin_override.json'
+  : path.join(__dirname, '../../admin_override.json');
 
 const getAdminPassword = () => {
   try {
