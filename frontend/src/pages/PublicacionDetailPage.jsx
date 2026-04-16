@@ -8,59 +8,41 @@ import api from '../services/api';
 function MarkdownText({ text }) {
   const lines = text.split('\n');
   const elements = [];
-  let i = 0;
 
-  while (i < lines.length) {
+  for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
 
-    // Línea vacía → separador de párrafo
-    if (line.trim() === '') {
-      i++;
-      continue;
-    }
+    if (line.trim() === '') continue;
 
-    // Separador ---
     if (/^---+$/.test(line.trim())) {
       elements.push(<hr key={i} className="border-outline-variant/30 my-6" />);
-      i++;
       continue;
     }
 
-    // Lista con viñetas
     if (/^[-*]\s/.test(line)) {
-      const items = [];
-      while (i < lines.length && /^[-*]\s/.test(lines[i])) {
-        items.push(<li key={i} className="ml-4">{renderInline(lines[i].replace(/^[-*]\s/, ''))}</li>);
-        i++;
-      }
-      elements.push(<ul key={`ul-${i}`} className="list-disc list-inside space-y-1 my-3 text-on-surface">{items}</ul>);
-      continue;
-    }
-
-    // Lista numerada
-    if (/^\d+\.\s/.test(line)) {
-      const items = [];
-      while (i < lines.length && /^\d+\.\s/.test(lines[i])) {
-        items.push(<li key={i} className="ml-4">{renderInline(lines[i].replace(/^\d+\.\s/, ''))}</li>);
-        i++;
-      }
-      elements.push(<ol key={`ol-${i}`} className="list-decimal list-inside space-y-1 my-3 text-on-surface">{items}</ol>);
-      continue;
-    }
-
-    // Párrafo normal — agrupar líneas consecutivas no vacías
-    const paraLines = [];
-    while (i < lines.length && lines[i].trim() !== '' && !/^[-*\d]/.test(lines[i]) && !/^---+$/.test(lines[i].trim())) {
-      paraLines.push(lines[i]);
-      i++;
-    }
-    if (paraLines.length) {
       elements.push(
-        <p key={`p-${i}`} className="my-3 leading-relaxed text-on-surface">
-          {renderInline(paraLines.join(' '))}
-        </p>
+        <ul key={i} className="list-disc list-inside my-1 text-on-surface">
+          <li className="ml-4">{renderInline(line.replace(/^[-*]\s/, ''))}</li>
+        </ul>
       );
+      continue;
     }
+
+    if (/^\d+\.\s/.test(line)) {
+      elements.push(
+        <ol key={i} className="list-decimal list-inside my-1 text-on-surface">
+          <li className="ml-4">{renderInline(line.replace(/^\d+\.\s/, ''))}</li>
+        </ol>
+      );
+      continue;
+    }
+
+    // Cualquier otra línea → párrafo
+    elements.push(
+      <p key={i} className="my-2 leading-relaxed text-on-surface">
+        {renderInline(line)}
+      </p>
+    );
   }
 
   return <div className="text-base">{elements}</div>;
@@ -68,17 +50,20 @@ function MarkdownText({ text }) {
 
 // Renderiza negrita e itálica dentro de una línea
 function renderInline(text) {
+  if (!text) return text;
+  // Solo matchea pares completos con contenido no vacío
+  const regex = /\*\*([^*]+)\*\*|_([^_]+)_/g;
   const parts = [];
-  const regex = /(\*\*(.+?)\*\*|_(.+?)_|\*(.+?)\*)/g;
   let last = 0;
   let match;
   let key = 0;
+  let iterations = 0;
 
   while ((match = regex.exec(text)) !== null) {
+    if (++iterations > 1000) break; // safety valve
     if (match.index > last) parts.push(<span key={key++}>{text.slice(last, match.index)}</span>);
-    if (match[2]) parts.push(<strong key={key++} className="font-bold">{match[2]}</strong>);
-    else if (match[3]) parts.push(<em key={key++} className="italic">{match[3]}</em>);
-    else if (match[4]) parts.push(<em key={key++} className="italic">{match[4]}</em>);
+    if (match[1]) parts.push(<strong key={key++} className="font-bold">{match[1]}</strong>);
+    else if (match[2]) parts.push(<em key={key++} className="italic">{match[2]}</em>);
     last = match.index + match[0].length;
   }
   if (last < text.length) parts.push(<span key={key++}>{text.slice(last)}</span>);
