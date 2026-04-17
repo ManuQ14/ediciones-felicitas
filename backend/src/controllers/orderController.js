@@ -1,6 +1,7 @@
 const { MercadoPagoConfig, Preference, Payment } = require('mercadopago');
 const crypto = require('crypto');
-const { getSignedDownloadUrl } = require('../config/storage');
+const { getSignedDownloadUrl, getLocalFilePath } = require('../config/storage');
+const fs = require('fs');
 const Order = require('../models/Order');
 const OrderItem = require('../models/OrderItem');
 const Book = require('../models/Book');
@@ -368,11 +369,22 @@ const downloadDigitalFile = async (req, res) => {
     }
 
     // Generar URL firmada de R2 válida por 10 minutos
-    // archivoDigital guarda la key de R2, ej: "digital/1234567890-abc.pdf"
     const signedUrl = await getSignedDownloadUrl(item.archivoDigital, 600);
 
-    // Redirigir al usuario — el navegador descarga directo desde R2/CDN
-    res.redirect(signedUrl);
+    if (signedUrl) {
+      // R2 configurado — redirigir a URL firmada
+      return res.redirect(signedUrl);
+    }
+
+    // Sin R2 — streamear el archivo directo (nunca exponer URL pública)
+    const filePath = getLocalFilePath(item.archivoDigital);
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ error: 'Archivo no encontrado en el servidor' });
+    }
+    const filename = item.archivoDigital.split('/').pop();
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Content-Type', 'application/pdf');
+    fs.createReadStream(filePath).pipe(res);
   } catch (err) {
     console.error('downloadDigitalFile error:', err);
     res.status(500).json({ error: 'Error al generar el enlace de descarga' });
