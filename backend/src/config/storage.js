@@ -62,11 +62,15 @@ const getSignedDownloadUrl = async (key, expiresIn = 600) => {
       { expiresIn }
     );
   } else {
-    // Local storage: return direct URL (backend serves static files)
-    const backendUrl = process.env.BACKEND_URL || 'http://localhost:3001';
-    return `${backendUrl}/uploads/${key}`;
+    // Sin R2: devolver null para que el endpoint streamee el archivo directo
+    return null;
   }
 };
+
+/**
+ * Devuelve la ruta local de un archivo digital (cuando no hay R2).
+ */
+const getLocalFilePath = (key) => path.join(LOCAL_UPLOADS_DIR, key);
 
 /**
  * Elimina un objeto de R2 o del almacenamiento local.
@@ -105,4 +109,4 @@ const getPublicUrl = (key) => {
   }
 };
 
-module.exports = { uploadToR2, getSignedDownloadUrl, deleteFromR2, getPublicUrl };
+module.exports = { uploadToR2, getSignedDownloadUrl, getLocalFilePath, deleteFromR2, getPublicUrl };

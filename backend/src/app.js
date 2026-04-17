@@ -115,12 +115,14 @@ app.use((req, res, next) => {
   next();
 });
 
-// Static file serving for local uploads (only in development when R2 is not configured)
+// Static file serving for local uploads (only when R2 is not configured)
+// SOLO portadas — los archivos digitales se sirven a través del endpoint autenticado
 const R2_CONFIGURED = R2_ENV.every((key) => process.env[key]);
 if (!R2_CONFIGURED) {
   const uploadsPath = path.join(__dirname, '../uploads');
-  app.use('/uploads', express.static(uploadsPath));
-  console.log('📁 Sirviendo archivos locales desde:', uploadsPath);
+  app.use('/uploads/libros', express.static(path.join(uploadsPath, 'libros')));
+  app.use('/uploads/publicaciones', express.static(path.join(uploadsPath, 'publicaciones')));
+  console.log('📁 Sirviendo portadas locales desde:', uploadsPath);
 }
 
 // Routes
