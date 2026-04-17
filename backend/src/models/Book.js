@@ -56,6 +56,27 @@ const Book = sequelize.define('Book', {
     type: DataTypes.BOOLEAN,
     defaultValue: true,
   },
+  // Datos de envío físico — requeridos para cálculo de tarifa Andreani
+  peso: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    comment: 'Peso en gramos (ej: 350)',
+  },
+  alto: {
+    type: DataTypes.DECIMAL(5, 1),
+    allowNull: true,
+    comment: 'Alto en cm',
+  },
+  ancho: {
+    type: DataTypes.DECIMAL(5, 1),
+    allowNull: true,
+    comment: 'Ancho en cm',
+  },
+  largo: {
+    type: DataTypes.DECIMAL(5, 1),
+    allowNull: true,
+    comment: 'Largo/profundidad en cm',
+  },
 });
 
 module.exports = Book;

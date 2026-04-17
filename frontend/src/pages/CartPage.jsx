@@ -104,7 +104,7 @@ function ConfirmModal({ title, message, confirmLabel, confirmClass, onConfirm, o
   );
 }
 
-function AddressModal({ user, isAllDigital, onConfirm, onCancel }) {
+function AddressModal({ user, isAllDigital, items, onConfirm, onCancel }) {
   const savedAddress = user?.direccion || '';
   const [useNew, setUseNew] = useState(!savedAddress);
   const [nueva, setNueva] = useState({ calle: '', altura: '', detalles: '' });
@@ -113,13 +113,42 @@ function AddressModal({ user, isAllDigital, onConfirm, onCancel }) {
     return nueva.detalles.trim() ? `${parts}, ${nueva.detalles.trim()}` : parts;
   };
   const [guardar, setGuardar] = useState(true);
+  const [cp, setCp] = useState('');
+  const [cpError, setCpError] = useState('');
+  const [shippingResult, setShippingResult] = useState(null); // { shippingCost, source, diasEstimados }
+  const [calcLoading, setCalcLoading] = useState(false);
 
   const addressToUse = useNew ? buildNueva() : savedAddress;
-  const canContinue = isAllDigital || (useNew ? (nueva.calle.trim() && nueva.altura.trim()) : !!savedAddress);
+  const addressOk = isAllDigital || (useNew ? (nueva.calle.trim() && nueva.altura.trim()) : !!savedAddress);
+  const cpOk = isAllDigital || /^\d{4}$/.test(cp.trim());
+  const canContinue = addressOk && cpOk;
+
+  const calcularEnvio = async () => {
+    if (!cpOk || isAllDigital) return;
+    setCalcLoading(true);
+    setCpError('');
+    setShippingResult(null);
+    try {
+      const { data } = await api.post('/shipping/calcular', {
+        cpDestino: cp.trim(),
+        items: items.map(i => ({ bookId: i.bookId, qty: i.qty, edicion: i.edicion })),
+      });
+      setShippingResult(data);
+    } catch (err) {
+      setCpError(err.response?.data?.error || 'No se pudo calcular el envío');
+    } finally {
+      setCalcLoading(false);
+    }
+  };
 
   const handleConfirm = () => {
     if (!canContinue) return;
-    onConfirm(isAllDigital ? null : addressToUse, useNew && guardar);
+    onConfirm(
+      isAllDigital ? null : addressToUse,
+      useNew && guardar,
+      cp.trim(),
+      shippingResult?.shippingCost ?? 0
+    );
   };
 
   return (
@@ -193,6 +222,42 @@ function AddressModal({ user, isAllDigital, onConfirm, onCancel }) {
           </div>
         )}
 
+        {/* Campo CP — solo para órdenes con físicos */}
+        {!isAllDigital && (
+          <div className="mt-4 space-y-2">
+            <label className="block text-xs font-bold uppercase tracking-widest text-outline">Código Postal destino</label>
+            <div className="flex gap-2">
+              <input
+                value={cp}
+                onChange={(e) => { setCp(e.target.value.replace(/[^0-9]/g, '').slice(0, 4)); setShippingResult(null); setCpError(''); }}
+                className="flex-1 border border-outline-variant rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+                placeholder="1425"
+                maxLength={4}
+                inputMode="numeric"
+              />
+              <button
+                type="button"
+                onClick={calcularEnvio}
+                disabled={!cpOk || calcLoading}
+                className="px-4 py-2 text-xs font-bold uppercase tracking-widest bg-surface-low text-on-surface rounded-lg hover:bg-surface-high transition-colors disabled:opacity-40"
+              >
+                {calcLoading ? '…' : 'Calcular'}
+              </button>
+            </div>
+            {cpError && <p className="text-error text-xs">{cpError}</p>}
+            {shippingResult && (
+              <div className="flex items-center gap-2 text-xs text-on-surface-variant bg-surface-low rounded-lg px-3 py-2">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 text-primary flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+                <span>
+                  Envío: <strong>{shippingResult.shippingCost === 0 ? 'Gratis' : formatPeso(shippingResult.shippingCost)}</strong>
+                  {shippingResult.diasEstimados && ` · ${shippingResult.diasEstimados} días hábiles`}
+                  {shippingResult.source === 'andreani' && <span className="ml-1 text-outline">(Andreani)</span>}
+                </span>
+              </div>
+            )}
+          </div>
+        )}
+
         <div className="flex gap-2 justify-end mt-4">
           <button onClick={onCancel} className="px-5 py-2.5 text-xs font-bold uppercase tracking-widest text-on-surface-variant hover:text-on-surface transition-colors">
             Cancelar
@@ -246,11 +311,15 @@ export default function CartPage() {
     setShowAddressModal(true);
   };
 
-  const handleAddressConfirm = async (direccion, guardar) => {
+  const handleAddressConfirm = async (direccion, guardar, cp, costoEnvioCalculado) => {
     if (guardar && updateProfile) {
       try { await updateProfile({ direccion }); } catch (_) { /* no bloqueamos el flujo */ }
     }
     setPendingAddress(direccion);
+    // Si vino un costo calculado por CP, usarlo; sino mantener el de config
+    if (typeof costoEnvioCalculado === 'number') {
+      setShippingCost(costoEnvioCalculado);
+    }
     setShowAddressModal(false);
     setShowCheckoutModal(true);
   };
@@ -326,6 +395,7 @@ export default function CartPage() {
         <AddressModal
           user={user}
           isAllDigital={isAllDigital}
+          items={items}
           onConfirm={handleAddressConfirm}
           onCancel={() => setShowAddressModal(false)}
         />

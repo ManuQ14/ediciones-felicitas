@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import api from '../../services/api';
 import { makeSanitizedHandler } from '../../utils/sanitize';
 
-const EMPTY = { titulo: '', isbn: '', precio: '', autor: '', categoria: '', imagen: '', archivoDigital: '', tieneDigital: false, stock: 0, paginas: '' };
+const EMPTY = { titulo: '', isbn: '', precio: '', autor: '', categoria: '', imagen: '', archivoDigital: '', tieneDigital: false, stock: 0, paginas: '', peso: '', alto: '', ancho: '', largo: '' };
 
 const CATEGORIAS = [
   'Narrativa', 'Poesía', 'Historia', 'Biografía',
@@ -70,6 +70,10 @@ export default function BookForm({ book, onSubmit, onCancel, loading, onFormChan
           tieneDigital: book.tieneDigital ?? false,
           stock: book.stock ?? 0,
           paginas: book.paginas || '',
+          peso: book.peso || '',
+          alto: book.alto || '',
+          ancho: book.ancho || '',
+          largo: book.largo || '',
         }
       : EMPTY
     );
@@ -84,7 +88,15 @@ export default function BookForm({ book, onSubmit, onCancel, loading, onFormChan
     e.preventDefault();
     if (!form.titulo.trim()) return setError('El título es obligatorio');
     if (!form.precio || isNaN(Number(form.precio))) return setError('Ingresá un precio válido');
-    onSubmit({ ...form, precio: Number(form.precio), paginas: form.paginas ? Number(form.paginas) : null });
+    onSubmit({
+      ...form,
+      precio:  Number(form.precio),
+      paginas: form.paginas ? Number(form.paginas) : null,
+      peso:    form.peso    ? Number(form.peso)    : null,
+      alto:    form.alto    ? Number(form.alto)    : null,
+      ancho:   form.ancho   ? Number(form.ancho)   : null,
+      largo:   form.largo   ? Number(form.largo)   : null,
+    });
   };
 
   return (
@@ -242,6 +254,71 @@ export default function BookForm({ book, onSubmit, onCancel, loading, onFormChan
             )}
           </div>
         )}
+
+        {/* Datos de envío físico — requeridos para cálculo automático con Andreani */}
+        <div className="p-5 bg-surface rounded-lg space-y-4">
+          <div>
+            <p className={labelClass + ' mb-0.5'}>Datos de envío físico</p>
+            <p className="text-xs text-on-surface-variant">Necesarios para calcular el costo de envío automáticamente. Si no los cargás, se usará un valor por defecto.</p>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div>
+              <label className={labelClass}>Peso (g)</label>
+              <input
+                name="peso"
+                type="number"
+                min="1"
+                max="9999"
+                value={form.peso}
+                onChange={(e) => { setForm(f => ({ ...f, peso: e.target.value.replace(/[^0-9]/g, '') })); onFormChange?.(); }}
+                className={inputClass}
+                placeholder="350"
+              />
+            </div>
+            <div>
+              <label className={labelClass}>Alto (cm)</label>
+              <input
+                name="alto"
+                type="number"
+                min="0.1"
+                step="0.1"
+                max="99"
+                value={form.alto}
+                onChange={(e) => { setForm(f => ({ ...f, alto: e.target.value })); onFormChange?.(); }}
+                className={inputClass}
+                placeholder="20"
+              />
+            </div>
+            <div>
+              <label className={labelClass}>Ancho (cm)</label>
+              <input
+                name="ancho"
+                type="number"
+                min="0.1"
+                step="0.1"
+                max="99"
+                value={form.ancho}
+                onChange={(e) => { setForm(f => ({ ...f, ancho: e.target.value })); onFormChange?.(); }}
+                className={inputClass}
+                placeholder="14"
+              />
+            </div>
+            <div>
+              <label className={labelClass}>Largo (cm)</label>
+              <input
+                name="largo"
+                type="number"
+                min="0.1"
+                step="0.1"
+                max="99"
+                value={form.largo}
+                onChange={(e) => { setForm(f => ({ ...f, largo: e.target.value })); onFormChange?.(); }}
+                className={inputClass}
+                placeholder="2"
+              />
+            </div>
+          </div>
+        </div>
 
         {error && <p className="text-error text-sm">{error}</p>}
 
