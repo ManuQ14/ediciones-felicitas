@@ -10,6 +10,7 @@ const Order = sequelize.define('Order', {
   costoEnvio: { type: DataTypes.DECIMAL(10, 2), defaultValue: 0 },
   mpPreferenceId: { type: DataTypes.STRING, allowNull: true },
   mpPaymentId: { type: DataTypes.STRING, allowNull: true },
+  trackingNumber: { type: DataTypes.STRING, allowNull: true },
   tipoEntrega: { type: DataTypes.STRING, allowNull: false }, // 'fisico','digital','mixto'
   direccionEnvio: { type: DataTypes.TEXT, allowNull: true },
   nombreComprador: { type: DataTypes.STRING, allowNull: false },

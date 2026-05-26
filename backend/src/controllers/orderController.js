@@ -8,6 +8,7 @@ const Book = require('../models/Book');
 const { Op } = require('sequelize');
 const sequelize = require('../config/database');
 const { sendOrderConfirmation } = require('../services/emailService');
+const correoArgentinoService = require('../services/correoArgentinoService');
 
 /**
  * Verifica la firma del webhook de MercadoPago.
@@ -205,6 +206,18 @@ const handleWebhook = async (req, res) => {
         }
       });
       sendOrderConfirmation(order); // fire-and-forget
+      
+      // Integración Correo Argentino: Generar envío automáticamente
+      if (order.tipoEntrega !== 'digital') {
+        try {
+          const trackingNumber = await correoArgentinoService.crearOrden(order);
+          if (trackingNumber) {
+            await order.update({ trackingNumber });
+          }
+        } catch (err) {
+          console.error('Error al generar envío en Correo Argentino:', err);
+        }
+      }
     }
 
     res.sendStatus(200);
@@ -270,6 +283,18 @@ const updateOrderStatus = async (req, res) => {
         }
       });
       sendOrderConfirmation(order); // fire-and-forget
+      
+      // Integración Correo Argentino: Generar envío automáticamente
+      if (order.tipoEntrega !== 'digital' && !order.trackingNumber) {
+        try {
+          const trackingNumber = await correoArgentinoService.crearOrden(order);
+          if (trackingNumber) {
+            await order.update({ trackingNumber });
+          }
+        } catch (err) {
+          console.error('Error al generar envío en Correo Argentino:', err);
+        }
+      }
     }
 
     res.json(order);
@@ -405,8 +430,28 @@ const deleteOrder = async (req, res) => {
   }
 };
 
+// GET /api/orders/:id/label — admin: descargar rótulo de Correo Argentino
+const downloadLabel = async (req, res) => {
+  try {
+    const order = await Order.findByPk(req.params.id);
+    if (!order) return res.status(404).json({ error: 'Orden no encontrada' });
+    if (!order.trackingNumber) return res.status(400).json({ error: 'La orden no tiene un envío generado en Correo Argentino' });
+
+    const base64Pdf = await correoArgentinoService.obtenerRotulo(order.trackingNumber);
+    if (!base64Pdf) return res.status(500).json({ error: 'No se pudo generar el rótulo' });
+
+    const pdfBuffer = Buffer.from(base64Pdf, 'base64');
+    res.setHeader('Content-Disposition', `attachment; filename="rotulo_${order.trackingNumber}.pdf"`);
+    res.setHeader('Content-Type', 'application/pdf');
+    res.send(pdfBuffer);
+  } catch (err) {
+    console.error('downloadLabel error:', err);
+    res.status(500).json({ error: err.message || 'Error al obtener el rótulo' });
+  }
+};
+
 module.exports = {
   createOrder, handleWebhook, getAdminOrders, getMyOrders,
   updateOrderStatus, requestCancellation, handleCancellationRequest,
-  confirmDelivery, downloadDigitalFile, deleteOrder,
+  confirmDelivery, downloadDigitalFile, deleteOrder, downloadLabel,
 };

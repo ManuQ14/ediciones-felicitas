@@ -91,6 +91,35 @@ function OrderCard({ order, onStatusChange, onCancellationDecision, onDelete }) 
             )}
           </div>
 
+          {/* Tracking info */}
+          {order.trackingNumber && (
+            <div className="flex items-center gap-2 text-xs bg-primary/5 p-2 rounded border border-primary/20">
+              <span className="uppercase tracking-widest font-bold text-primary">Envío (C. Arg):</span>
+              <span className="font-mono text-on-surface font-semibold">{order.trackingNumber}</span>
+              <button
+                onClick={async (e) => {
+                  e.stopPropagation();
+                  try {
+                    const response = await api.get(`/orders/${order.id}/label`, { responseType: 'blob' });
+                    const url = window.URL.createObjectURL(new Blob([response.data]));
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.setAttribute('download', `rotulo_${order.trackingNumber}.pdf`);
+                    document.body.appendChild(link);
+                    link.click();
+                    link.remove();
+                  } catch (err) {
+                    alert('Error al descargar el rótulo de envío.');
+                  }
+                }}
+                className="ml-auto flex items-center gap-1 bg-primary text-on-primary px-3 py-1.5 rounded-full hover:bg-primary/90 transition-colors font-bold uppercase tracking-widest shadow-sm"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Descargar Rótulo
+              </button>
+            </div>
+          )}
+
           {/* MP ids */}
           {(order.mpPreferenceId || order.mpPaymentId) && (
             <div className="flex flex-wrap gap-6 text-xs">

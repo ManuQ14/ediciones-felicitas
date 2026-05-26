@@ -6,6 +6,12 @@ dist
 # Claude Code — worktrees y memoria local (nunca al repo)
 .claude/
 
+.gemini/
+.claude
+CLAUDE.md
+DEPLOY_GUIDE.md
+GEMINI.md
+
 # Admin password override (generado en runtime, nunca commitear)
 backend/admin_override.json
 
@@ -16,3 +22,7 @@ backend/uploads/digital/
 # Logs
 *.log
 npm-debug.log*
+
+.claire/
+
+DEPLOY_GUIDE.md
